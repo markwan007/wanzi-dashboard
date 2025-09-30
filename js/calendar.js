@@ -57,10 +57,20 @@ function renderAgenda() {
                             </button>
                         ` : '';
                         
+                        // 跳过按钮（小叉叉）
+                        const skipButtonHTML = `
+                            <button class="skip-task-btn text-gray-400 hover:text-red-500 p-1 text-sm transition-colors" 
+                                    data-task-id="${taskInfo.id}" 
+                                    title="今天跳过此任务">
+                                ✕
+                            </button>
+                        `;
+                        
                         li.innerHTML = `
                             <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
                             <div class="flex-grow">${linkHTML}<p class="text-sm text-gray-500">${taskInfo.projectTitle}</p></div>
                             ${reviewIconHTML}
+                            ${skipButtonHTML}
                             <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
                         `;
             agendaList.appendChild(li);
@@ -76,6 +86,9 @@ function getTasksForDate(date) {
     const dayOfWeek = date.getDay(); // 0-6 (Sunday-Saturday)
     const dayOfMonth = date.getDate(); // 1-31
     const tasks = [];
+    
+    // 获取今日跳过的任务列表
+    const skippedTasks = (window.appData.skippedTasks && window.appData.skippedTasks[dateStr]) || [];
     
     // 获取项目任务
     Object.keys(window.appData.boards).forEach(boardKey => {
@@ -114,7 +127,8 @@ function getTasksForDate(date) {
                         }
                     }
                     
-                    if (shouldShow) {
+                    // 如果任务被跳过，则不显示
+                    if (shouldShow && !skippedTasks.includes(task.id)) {
                         tasks.push({ ...task, projectTitle: project.title, projectId: project.id, color: board.color });
                     }
                 });
@@ -160,6 +174,41 @@ async function toggleTaskCompletion(taskId) {
     window.app.renderAll();
 }
 
+// 跳过任务（今天不做）
+async function skipTask(taskId) {
+    const dateStr = window.utils.toDateString(viewedDate);
+    
+    if (!window.appData.skippedTasks) {
+        window.appData.skippedTasks = {};
+    }
+    if (!window.appData.skippedTasks[dateStr]) {
+        window.appData.skippedTasks[dateStr] = [];
+    }
+    
+    // 添加到跳过列表
+    if (!window.appData.skippedTasks[dateStr].includes(taskId)) {
+        window.appData.skippedTasks[dateStr].push(taskId);
+        await window.firebaseUtils.saveData(window.userId, window.appData);
+        renderAgenda();
+        
+        // 显示提示
+        showSkipToast();
+    }
+}
+
+// 显示跳过任务的提示
+function showSkipToast() {
+    const toast = document.createElement('div');
+    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
+    toast.textContent = '✓ 任务已跳过（明天会重新出现）';
+    
+    const container = document.getElementById('toast-container');
+    if (container) {
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+}
+
 function setupCalendarEventListeners() {
     document.getElementById('prev-month').addEventListener('click', () => { 
         calendarDate.setMonth(calendarDate.getMonth() - 1); 
@@ -202,5 +251,6 @@ window.calendarModule = {
     setViewedDate: (date) => { viewedDate = date; },
     getTasksForDate,
     isTaskCompletedOnDate,
-    toggleTaskCompletion
+    toggleTaskCompletion,
+    skipTask
 };

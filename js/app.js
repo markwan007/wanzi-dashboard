@@ -53,6 +53,16 @@ function initializeAppEventListeners() {
             window.calendarModule.toggleTaskCompletion(e.target.dataset.taskId);
         }
     });
+    
+    // 跳过任务按钮
+    document.body.addEventListener('click', e => {
+        if (e.target.classList.contains('skip-task-btn')) {
+            const taskId = e.target.dataset.taskId;
+            if (confirm('确定要跳过这个任务吗？明天它会重新出现。')) {
+                window.calendarModule.skipTask(taskId);
+            }
+        }
+    });
 
     // 设置各个模块的事件监听器
     window.calendarModule.setupCalendarEventListeners();

@@ -31,6 +31,9 @@ function openReviewJournal(projectId) {
     document.getElementById('review-project-title').textContent = project.title;
     document.getElementById('review-project-period').textContent = `${project.startDate} ~ ${project.endDate}`;
     
+    // 计算并显示本周数据统计
+    renderWeeklyStats(project, boardKey);
+    
     // 清空表单
     reviewJournalForm.reset();
     
@@ -50,6 +53,112 @@ function closeReviewJournal() {
     reviewJournalModal.classList.add('opacity-0');
     reviewJournalModal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
     setTimeout(() => reviewJournalModal.classList.add('hidden'), 300);
+}
+
+// 渲染本周数据统计
+function renderWeeklyStats(project, boardKey) {
+    const board = window.appData.boards[boardKey];
+    const today = new Date();
+    
+    // 计算本周的日期范围（周一到周日）
+    const currentDay = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    // 收集本周所有应该完成的任务
+    const weekTasks = [];
+    const incompleteTasks = [];
+    
+    for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
+        const dateStr = window.utils.toDateString(d);
+        const dayOfWeek = d.getDay();
+        const dayOfMonth = d.getDate();
+        
+        // 检查日期是否在项目周期内
+        if (dateStr < project.startDate || dateStr > project.endDate) continue;
+        
+        (project.tasks || []).forEach(task => {
+            // 跳过复盘任务
+            if (task.isReview) return;
+            
+            let shouldShow = false;
+            
+            if (task.frequency) {
+                switch (task.frequency) {
+                    case 'daily':
+                        shouldShow = true;
+                        break;
+                    case 'once':
+                        shouldShow = task.date === dateStr;
+                        break;
+                    case 'weekly':
+                        shouldShow = task.weekdays && task.weekdays.includes(dayOfWeek);
+                        break;
+                    case 'monthly':
+                        shouldShow = task.monthDay === dayOfMonth;
+                        break;
+                }
+            }
+            
+            if (shouldShow) {
+                const taskRecord = {
+                    ...task,
+                    date: dateStr,
+                    dateDisplay: `${d.getMonth() + 1}/${d.getDate()}`,
+                    isCompleted: window.appData.taskCompletions?.[task.id]?.includes(dateStr) || false
+                };
+                
+                weekTasks.push(taskRecord);
+                
+                if (!taskRecord.isCompleted) {
+                    incompleteTasks.push(taskRecord);
+                }
+            }
+        });
+    }
+    
+    // 计算统计数据
+    const totalCount = weekTasks.length;
+    const completedCount = weekTasks.filter(t => t.isCompleted).length;
+    const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+    
+    // 更新UI
+    document.getElementById('review-completion-rate').textContent = `${completionRate}%`;
+    document.getElementById('review-completed-count').textContent = completedCount;
+    document.getElementById('review-total-count').textContent = totalCount;
+    
+    // 渲染未完成任务列表
+    const incompleteTasksDiv = document.getElementById('review-incomplete-tasks');
+    
+    if (incompleteTasks.length === 0) {
+        incompleteTasksDiv.innerHTML = `
+            <div class="text-center py-4 text-green-600 font-medium">
+                🎉 太棒了！本周所有任务都已完成！
+            </div>
+        `;
+    } else {
+        incompleteTasksDiv.innerHTML = `
+            <div class="border-t pt-3">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">⚠️ 未完成任务 (${incompleteTasks.length}个)</h4>
+                <ul class="space-y-2 max-h-40 overflow-y-auto">
+                    ${incompleteTasks.map(task => `
+                        <li class="text-sm flex items-start space-x-2 text-gray-600">
+                            <span class="text-red-500 mt-0.5">•</span>
+                            <div class="flex-1">
+                                <span class="font-medium">${task.text}</span>
+                                <span class="text-gray-400 ml-2">(${task.dateDisplay})</span>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    }
 }
 
 // 渲染历史记录

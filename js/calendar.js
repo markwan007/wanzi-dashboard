@@ -18,11 +18,39 @@ function renderCalendar() {
     for (let day = 1; day <= daysInMonth; day++) {
         const dayEl = document.createElement('div');
         dayEl.textContent = day;
-        dayEl.className = 'calendar-day p-2 rounded-full cursor-pointer';
+        dayEl.className = 'calendar-day p-2 rounded-full cursor-pointer relative';
         dayEl.dataset.date = window.utils.toDateString(new Date(year, month, day));
         
         const tasksForDay = getTasksForDate(new Date(year, month, day));
-        if(tasksForDay.length > 0) dayEl.classList.add('event-day');
+        
+        // 如果有任务，添加多色dots
+        if(tasksForDay.length > 0) {
+            // 获取该日期涉及的板块颜色
+            const boardColors = [...new Set(tasksForDay.map(task => task.color))];
+            
+            // 创建dots容器
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'dots-container';
+            
+            // 为每个板块颜色创建一个dot，最多显示4个
+            boardColors.slice(0, 4).forEach(color => {
+                const dot = document.createElement('div');
+                const colorClass = window.utils.colorMap[color]?.dot || 'bg-gray-500';
+                dot.className = `board-dot ${colorClass}`;
+                dot.title = `${window.appData.boards[Object.keys(window.appData.boards).find(key => window.appData.boards[key].color === color)]?.title || '未知板块'}板块有任务`;
+                dotsContainer.appendChild(dot);
+            });
+            
+            // 如果板块超过4个，添加省略号dot
+            if (boardColors.length > 4) {
+                const moreDot = document.createElement('div');
+                moreDot.className = 'board-dot bg-gray-400';
+                moreDot.title = `还有${boardColors.length - 4}个板块有任务`;
+                dotsContainer.appendChild(moreDot);
+            }
+            
+            dayEl.appendChild(dotsContainer);
+        }
 
         if (window.utils.isSameDay(new Date(year, month, day), new Date())) dayEl.classList.add('today');
         if (window.utils.isSameDay(new Date(year, month, day), viewedDate)) dayEl.classList.add('selected');

@@ -61,15 +61,45 @@ body {
 .progress-bar-inner { transition: width 0.5s ease-out; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); }
 
 /* ---日历--- */
-.calendar-day { transition: all 0.2s ease; }
+.calendar-day { 
+    transition: all 0.2s ease; 
+    position: relative;
+    min-height: 2.5rem; /* 确保有足够空间显示dots */
+}
 .calendar-day.selected { border: 2px solid #f97316; }
 .calendar-day.today { background-color: #f97316; color: white; font-weight: bold; box-shadow: 0 0 12px rgba(249, 115, 22, 0.5); }
-.calendar-day.event-day::after {
-    content: ''; display: block; width: 6px; height: 6px;
-    border-radius: 50%; background-color: #ef4444;
-    margin: 2px auto 0;
-}
 .calendar-day:not(.other-month):hover { background-color: #fff7ed; }
+
+/* 多色dots样式 */
+.calendar-day .dots-container {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+    max-width: 100%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.calendar-day .board-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day:hover .board-dot {
+    transform: scale(1.2);
+}
+
+/* 今天的dots需要特殊处理，确保在白色背景上可见 */
+.calendar-day.today .board-dot {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
 
 /* ---模态框 (Modal)--- */
 .modal-overlay { transition: opacity 0.3s ease; }

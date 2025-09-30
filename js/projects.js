@@ -204,6 +204,9 @@ function loadProjectData(projectId, boardKey) {
             addModalTaskRow();
             const lastRow = tasksContainer.lastElementChild;
             
+            // 设置任务ID到行元素
+            lastRow.dataset.taskId = task.id;
+            
             // 填充任务数据
             lastRow.querySelector('.modal-task-text').value = task.text;
             lastRow.querySelector('.modal-task-link').value = task.link || '';
@@ -526,18 +529,25 @@ async function updateExistingProject() {
     project.reviewDay = parseInt(document.getElementById('review-day').value);
     
     // 重新构建任务列表（排除旧的复盘任务）
+    const existingTaskIds = new Set();
     project.tasks = [];
     
-    document.querySelectorAll('#modal-tasks-container > div').forEach(row => {
+    document.querySelectorAll('#modal-tasks-container > div').forEach((row, index) => {
         const frequency = row.querySelector('.modal-task-frequency').value;
         const task = {
-            id: `task-${Date.now()}-${Math.random()}`,
+            id: row.dataset.taskId || `task-${Date.now()}-${Math.random()}`, // 保留现有ID或生成新ID
             text: row.querySelector('.modal-task-text').value,
             link: row.querySelector('.modal-task-link').value || '',
             notes: row.querySelector('.modal-task-notes').value || '',
             frequency: frequency,
             time: row.querySelector('.modal-task-time').value || ''
         };
+        
+        // 确保ID唯一性
+        while (existingTaskIds.has(task.id)) {
+            task.id = `task-${Date.now()}-${Math.random()}`;
+        }
+        existingTaskIds.add(task.id);
         
         if (frequency === 'once') {
             task.date = row.querySelector('.modal-task-date').value;

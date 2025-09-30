@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>丸子的系统生活</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              orange: {
+                50: '#fff7ed',
+                100: '#ffedd5',
+                200: '#fed7aa',
+                300: '#fdba74',
+                400: '#fb923c',
+                500: '#f97316',
+                600: '#ea580c',
+                700: '#c2410c',
+                800: '#9a3412',
+                900: '#7c2d12',
+              },
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(circle at top right, rgba(251, 146, 60, 0.05), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent 50%);
+        }
+
+        /* ---滚动条--- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ---核心UI元素--- */
+        .glass-pane {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .glass-pane-hover:hover { box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1); }
+
+        .nav-item.active { color: #ea580c; }
+        .nav-item.active::after {
+            content: ''; position: absolute; left: 0; bottom: -10px; 
+            width: 100%; height: 3px; border-radius: 1.5px; 
+            background-color: #f97316; box-shadow: 0 0 8px #f97316; 
+            animation: fade-in-underline 0.3s ease;
+        }
+        
+        /* 项目卡片内的Tab */
+        .project-tab {
+            cursor: pointer;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+        }
+        .project-tab.active {
+            color: #ea580c;
+            border-bottom-color: #f97316;
+        }
+
+
+        .custom-checkbox {
+            appearance: none; width: 20px; height: 20px; border-radius: 6px;
+            border: 2px solid #94a3b8; cursor: pointer; transition: all 0.2s ease; position: relative;
+            flex-shrink: 0;
+        }
+        .custom-checkbox:checked {
+            background-color: #f97316;
+            border-color: #f97316;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+        }
+        .custom-checkbox:checked::after {
+            content: '✔'; color: #ffffff; font-size: 14px; font-weight: bold;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .task-label.completed { text-decoration: line-through; color: #94a3b8; }
+        
+        .progress-bar-inner { transition: width 0.5s ease-out; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); }
+
+        /* ---日历--- */
+        .calendar-day { transition: all 0.2s ease; }
+        .calendar-day.selected { border: 2px solid #f97316; }
+        .calendar-day.today { background-color: #f97316; color: white; font-weight: bold; box-shadow: 0 0 12px rgba(249, 115, 22, 0.5); }
+        .calendar-day.event-day::after {
+            content: ''; display: block; width: 6px; height: 6px;
+            border-radius: 50%; background-color: #ef4444;
+            margin: 2px auto 0;
+        }
+        .calendar-day:not(.other-month):hover { background-color: #fff7ed; }
+
+        /* ---模态框 (Modal)--- */
+        .modal-overlay { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        
+        /* ---动效--- */
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fade-in-underline { from { opacity: 0; width: 0; } to { opacity: 1; width: 100%; } }
+        .fade-in { animation: fade-in 0.5s ease-out forwards; }
+    </style>
+  </head>
+<body class="bg-slate-50 text-gray-700">
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
+
+    <!-- 登录/注册界面 -->
+    <div id="auth-container" class="min-h-screen flex items-center justify-center">
+        <div class="glass-pane rounded-xl w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/30 mx-auto">S</div>
+                <h1 class="text-2xl font-bold text-gray-900 mt-4">欢迎来到丸子的系统生活</h1>
+            </div>
+            <form id="auth-form">
+                <div class="space-y-4">
+                    <input type="email" id="email" placeholder="邮箱" class="w-full p-3 bg-white/50 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" required>
+                    <input type="password" id="password" placeholder="密码 (至少6位)" class="w-full p-3 bg-white/50 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" required>
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button type="submit" id="login-btn" class="w-full py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold">登录</button>
+                    <button type="submit" id="register-btn" class="w-full py-3 rounded-lg bg-gray-700 hover:bg-gray-800 text-white font-semibold">注册</button>
+                </div>
+                <div class="relative flex py-5 items-center">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 text-sm">或</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+                <button type="button" id="google-login-btn" class="w-full py-3 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 font-semibold flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107"></path><path d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l5.657,5.657C42.846,35.819,44,30.222,44,24C44,22.659,43.862,21.35,43.611,20.083z" fill="#FF3D00"></path><path d="M6.306,14.691l5.657,5.657C14.156,22.457,15,24.819,15,27.5c0,2.681-0.844,5.043-2.343,7.152l-5.657,5.657C4.846,36.819,4,31.222,4,25.5C4,22.659,4.862,18.35,6.306,14.691z" fill="#4CAF50" transform="rotate(-45 10 25.5)"></path><path d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,40.457,16.227,44,24,44z" fill="#1976D2"></path><path d="M43.611,20.083L43.595,20L24,20v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="none"></path></svg>
+                    使用 Google 登录
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 主应用界面 (默认隐藏) -->
+    <div id="app-container" class="hidden">
+        <!-- 顶部导航栏 -->
+        <header class="sticky top-0 z-30 w-full glass-pane border-b">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/30">S</div>
+                        <h1 class="text-xl font-bold text-gray-900 hidden sm:block">丸子的系统生活</h1>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <nav id="nav-menu">
+                            <ul class="flex items-center space-x-2 md:space-x-6">
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3 active" data-board="home">主页</a></li>
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3" data-board="startup">创业</a></li>
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3" data-board="finance">财务</a></li>
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3" data-board="learning">学习</a></li>
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3" data-board="health">健康</a></li>
+                                <li><a href="#" class="nav-item relative font-semibold text-gray-600 hover:text-orange-600 transition-colors p-3" data-board="misc">其他</a></li>
+                            </ul>
+                        </nav>
+                        <button id="logout-btn" class="text-gray-500 hover:text-orange-600" title="登出">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main id="main-content" class="max-w-7xl mx-auto p-6 md:p-10">
+            <div id="boards-container">
+                <!-- 主页板块 -->
+                <div id="board-home" class="board-panel fade-in">
+                    <header class="mb-10">
+                        <h2 id="welcome-title" class="text-3xl font-bold text-gray-900">你好，欢迎回来！</h2>
+                        <p id="viewed-date-display" class="text-gray-500">今天是...</p>
+                    </header>
+                    <section class="mb-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 glass-pane rounded-xl p-6 glass-pane-hover">
+                            <div class="flex justify-between items-center mb-4">
+                                <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200">&lt;</button>
+                                <h3 id="month-year" class="text-xl font-semibold text-gray-900"></h3>
+                                <button id="next-month" class="p-2 rounded-full hover:bg-gray-200">&gt;</button>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 text-center text-sm text-gray-500 mb-2">
+                                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                            </div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-2 text-center"></div>
+                        </div>
+                        <div class="glass-pane rounded-xl p-6 glass-pane-hover">
+                             <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-semibold text-gray-900">日程清单</h3>
+                                <button id="add-event-btn" class="text-orange-500 hover:text-orange-700 font-bold text-2xl leading-none" title="添加临时事件">+</button>
+                             </div>
+                             <ul id="agenda-list" class="space-y-4"></ul>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 其他板块 -->
+                <div id="board-startup" class="board-panel hidden"></div>
+                <div id="board-finance" class="board-panel hidden"></div>
+                <div id="board-learning" class="board-panel hidden"></div>
+                <div id="board-health" class="board-panel hidden"></div>
+                <div id="board-misc" class="board-panel hidden"></div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 新建项目模态框 -->
+    <div id="project-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 hidden opacity-0">
+        <div class="modal-content glass-pane rounded-xl w-full max-w-2xl p-8 transform scale-95 opacity-0">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">创建新项目</h2>
+            <form id="project-form">
+                <div class="space-y-6">
+                    <div>
+                        <label for="project-name" class="font-semibold text-gray-700">项目名称</label>
+                        <input type="text" id="project-name" class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="start-date" class="font-semibold text-gray-700">开始日期</label>
+                            <input type="date" id="start-date" class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="end-date" class="font-semibold text-gray-700">结束日期</label>
+                            <input type="date" id="end-date" class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg" required>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">任务列表</h3>
+                        <div id="modal-tasks-container" class="space-y-3"></div>
+                        <button type="button" id="add-modal-task" class="mt-2 text-sm font-semibold text-orange-600 hover:text-orange-800">+ 添加任务</button>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">KPIs (关键绩效指标)</h3>
+                        <div id="modal-kpis-container" class="space-y-3"></div>
+                        <button type="button" id="add-modal-kpi" class="mt-2 text-sm font-semibold text-orange-600 hover:text-orange-800">+ 添加KPI</button>
+                    </div>
+                    <div>
+                        <label for="review-day" class="font-semibold text-gray-700">每周复盘日</label>
+                        <select id="review-day" class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg">
+                            <option value="-1">不设置</option>
+                            <option value="1">周一</option>
+                            <option value="2">周二</option>
+                            <option value="3">周三</option>
+                            <option value="4">周四</option>
+                            <option value="5">周五</option>
+                            <option value="6">周六</option>
+                            <option value="0">周日</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-8">
+                    <button type="button" id="cancel-project" class="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold">创建项目</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Firebase 初始化 ---
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const auth = firebase.auth();
+            const googleProvider = new firebase.auth.GoogleAuthProvider();
+            
+            // --- 全局状态 ---
+            let appData;
+            let viewedDate = new Date();
+            let calendarDate = new Date();
+            let userId;
+            
+            const colorMap = {
+                purple: { gradient: 'from-red-500 to-orange-500', dot: 'bg-red-500', border: 'border-red-500' },
+                blue: { gradient: 'from-orange-500 to-amber-500', dot: 'bg-orange-500', border: 'border-orange-500' },
+                indigo: { gradient: 'from-amber-500 to-yellow-500', dot: 'bg-amber-500', border: 'border-amber-500' },
+                rose: { gradient: 'from-rose-500 to-red-500', dot: 'bg-rose-500', border: 'border-rose-500' },
+                amber: { gradient: 'from-yellow-400 to-amber-400', dot: 'bg-yellow-400', border: 'border-yellow-400' },
+                gray: { gradient: 'from-gray-500 to-gray-600', dot: 'bg-gray-500', border: 'border-gray-500'}
+            };
+            
+            const authContainer = document.getElementById('auth-container');
+            const appContainer = document.getElementById('app-container');
+
+            // --- 认证逻辑 ---
+            auth.onAuthStateChanged(async user => {
+                if (user) {
+                    userId = user.uid;
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    await loadData();
+                    initializeAppEventListeners(); // 修复: 登录后才绑定事件
+                    renderAll();
+                } else {
+                    userId = null;
+                    appContainer.classList.add('hidden');
+                    authContainer.classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('login-btn').addEventListener('click', e => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch(error => alert(`登录失败: ${error.message}`));
+            });
+
+            document.getElementById('register-btn').addEventListener('click', e => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                auth.createUserWithEmailAndPassword(email, password)
+                    .catch(error => alert(`注册失败: ${error.message}`));
+            });
+
+            document.getElementById('google-login-btn').addEventListener('click', () => {
+                auth.signInWithPopup(googleProvider)
+                    .catch(error => alert(`Google 登录失败: ${error.message}`));
+            });
+            
+            // --- 数据管理 (Firebase) ---
+            async function loadData() {
+                const docRef = db.collection('users').doc(userId);
+                const doc = await docRef.get();
+                if (doc.exists) {
+                    appData = doc.data();
+                } else {
+                    appData = {
+                        boards: {
+                            startup: { title: "创业", color: "purple", projects: [] },
+                            finance: { title: "财务", color: "blue", projects: [] },
+                            learning: { title: "学习", color: "indigo", projects: [] },
+                            health: { title: "健康", color: "rose", projects: [] },
+                            misc: { title: "其他", color: "amber", projects: [] },
+                        },
+                        events: [], 
+                        taskCompletions: {} 
+                    };
+                    await saveData();
+                }
+            }
+
+            async function saveData() {
+                if (!userId) return;
+                const docRef = db.collection('users').doc(userId);
+                await docRef.set(appData);
+            }
+
+            // --- 核心渲染逻辑 ---
+            function renderAll() {
+                if (!appData) return;
+                renderCalendar();
+                renderAgenda();
+                renderAllBoards();
+            }
+            
+            // --- 日历和日程 ---
+            function renderCalendar() {
+                const year = calendarDate.getFullYear();
+                const month = calendarDate.getMonth();
+                document.getElementById('month-year').textContent = `${year}年 ${month + 1}月`;
+                
+                const calendarGrid = document.getElementById('calendar-grid');
+                calendarGrid.innerHTML = '';
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let i = 0; i < firstDayOfMonth; i++) calendarGrid.innerHTML += `<div></div>`;
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.textContent = day;
+                    dayEl.className = 'calendar-day p-2 rounded-full cursor-pointer';
+                    dayEl.dataset.date = toDateString(new Date(year, month, day));
+                    
+                    const tasksForDay = getTasksForDate(new Date(year, month, day));
+                    if(tasksForDay.length > 0) dayEl.classList.add('event-day');
+
+                    if (isSameDay(new Date(year, month, day), new Date())) dayEl.classList.add('today');
+                    if (isSameDay(new Date(year, month, day), viewedDate)) dayEl.classList.add('selected');
+                    
+                    calendarGrid.appendChild(dayEl);
+                }
+            }
+            
+            function renderAgenda() {
+                const agendaList = document.getElementById('agenda-list');
+                const tasksForViewedDate = getTasksForDate(viewedDate);
+                
+                document.getElementById('viewed-date-display').textContent = `正在查看 ${viewedDate.toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+                document.getElementById('welcome-title').textContent = isSameDay(viewedDate, new Date()) ? '你好，欢迎回来！' : `计划回顾`;
+
+                agendaList.innerHTML = '';
+                if (tasksForViewedDate.length > 0) {
+                    tasksForViewedDate.forEach(taskInfo => {
+                        const li = document.createElement('li');
+                        li.className = 'flex items-start space-x-3';
+                        const isCompleted = isTaskCompletedOnDate(taskInfo.id, viewedDate);
+                        const colors = colorMap[taskInfo.color] || colorMap.gray;
+                        const linkHTML = taskInfo.link ? `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}">${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}">${taskInfo.text}</label>`;
+
+                        li.innerHTML = `
+                            <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
+                            <div class="flex-grow">${linkHTML}<p class="text-sm text-gray-500">${taskInfo.projectTitle}</p></div>
+                            <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
+                        `;
+                        agendaList.appendChild(li);
+                    });
+                } else {
+                    agendaList.innerHTML = '<li class="text-gray-400">当天没有任务</li>';
+                }
+            }
+
+            // --- 板块和项目渲染 ---
+            function renderAllBoards() {
+                Object.keys(appData.boards).forEach(key => renderSingleBoard(key));
+            }
+
+            function renderSingleBoard(key) {
+                const data = appData.boards[key];
+                if (!data) return;
+                const panel = document.getElementById(`board-${key}`);
+                const colors = colorMap[data.color];
+
+                const projectsHTML = (data.projects || []).map(project => {
+                    const tasksForProjectOnDate = getTasksForDate(viewedDate).filter(t => t.projectId === project.id && t.type !== 'review');
+                    const tasksHTML = tasksForProjectOnDate.map(task => {
+                         const isCompleted = isTaskCompletedOnDate(task.id, viewedDate);
+                         const linkHTML = task.link ? `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}">${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}">${task.text}</label>`;
+                         return `<li class="flex items-center">
+                                    <input id="board-task-${task.id}" type="checkbox" class="custom-checkbox task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''}>
+                                    ${linkHTML}
+                                </li>`
+                    }).join('');
+
+                    const kpisHTML = (project.kpis || []).map(kpi => `
+                        <div class="text-sm">
+                            <label class="font-medium text-gray-600">${kpi.text}</label>
+                            <div class="flex items-center mt-1">
+                                <input type="number" value="${kpi.currentValue}" class="kpi-input w-20 p-1 text-center bg-white/50 border border-gray-300 rounded-lg" data-project-id="${project.id}" data-kpi-id="${kpi.id}">
+                                <span class="mx-2 text-gray-400">/</span>
+                                <span class="font-semibold">${kpi.targetValue}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    const reviewsHTML = (project.reviews || []).slice().reverse().map(review => `
+                        <div class="p-3 bg-gray-50 rounded-lg mt-2">
+                           <p class="font-semibold text-sm">${review.date}</p>
+                           <p class="text-xs mt-1"><strong>成就:</strong> ${review.wins}</p>
+                           <p class="text-xs"><strong>挑战:</strong> ${review.challenges}</p>
+                        </div>
+                    `).join('');
+
+
+                    return `
+                    <div class="glass-pane rounded-xl overflow-hidden glass-pane-hover border-t-4 ${colors.border}">
+                        <div class="p-6">
+                            <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
+                            <p class="text-xs text-gray-500 mb-4">${project.startDate} 到 ${project.endDate}</p>
+                            
+                            <div class="flex border-b mb-4 text-sm font-medium text-gray-500">
+                                <button class="project-tab active" data-tab="tasks" data-project-id="${project.id}">任务</button>
+                                <button class="project-tab ml-4" data-tab="kpis" data-project-id="${project.id}">KPIs</button>
+                                <button class="project-tab ml-4" data-tab="reviews" data-project-id="${project.id}">复盘日志</button>
+                            </div>
+
+                            <div class="project-tab-content" data-tab-content="tasks" data-project-id="${project.id}">
+                                <ul class="space-y-4 mb-6 min-h-[50px]">${tasksHTML || '<p class="text-sm text-gray-400">今天没有此项目的任务。</p>'}</ul>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="progress-bar-inner bg-gradient-to-r ${colors.gradient} h-2.5 rounded-full" data-project-id="${project.id}" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="project-tab-content hidden" data-tab-content="kpis" data-project-id="${project.id}">
+                                <div class="space-y-4">${kpisHTML || '<p class="text-sm text-gray-400">未设定KPI。</p>'}</div>
+                            </div>
+                            <div class="project-tab-content hidden" data-tab-content="reviews" data-project-id="${project.id}">
+                                <div class="max-h-40 overflow-y-auto mb-4">${reviewsHTML || '<p class="text-sm text-gray-400">暂无复盘记录。</p>'}</div>
+                                <form class="review-form" data-project-id="${project.id}">
+                                    <textarea class="w-full p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="本周成就..." name="wins" required></textarea>
+                                    <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="遇到的挑战..." name="challenges" required></textarea>
+                                    <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="学到的经验..." name="learnings" required></textarea>
+                                    <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="下周计划..." name="nextSteps" required></textarea>
+                                    <button type="submit" class="mt-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-lg">保存复盘</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>`
+                }).join('');
+
+                panel.innerHTML = `
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900">${data.title}</h3>
+                        <button class="add-project-btn bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600" data-board-key="${key}">+ 新建项目</button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">${projectsHTML}</div>
+                `;
+                updateAllProgressBars();
+            }
+
+            function updateAllProgressBars() {
+                const activeBoardKey = getActiveBoardKey();
+                if(!appData || !appData.boards[activeBoardKey]) return;
+
+                appData.boards[activeBoardKey].projects.forEach(project => {
+                    const tasksForDayInProject = getTasksForDate(viewedDate).filter(t => t.projectId === project.id && t.type !== 'review');
+                    const completedCount = tasksForDayInProject.filter(t => isTaskCompletedOnDate(t.id, viewedDate)).length;
+                    const percentage = tasksForDayInProject.length > 0 ? (completedCount / tasksForDayInProject.length) * 100 : 0;
+                    const progressBar = document.querySelector(`.progress-bar-inner[data-project-id="${project.id}"]`);
+                    if(progressBar) progressBar.style.width = `${percentage}%`;
+                });
+            }
+
+            // --- 任务逻辑 ---
+            function getTasksForDate(date) {
+                if (!appData) return [];
+                const dateStr = toDateString(date);
+                const tasks = [];
+                // 获取项目任务
+                Object.keys(appData.boards).forEach(boardKey => {
+                    const board = appData.boards[boardKey];
+                    (board.projects || []).forEach(project => {
+                        const viewedDateStr = toDateString(date);
+                        if(project.startDate && project.endDate && viewedDateStr >= project.startDate && viewedDateStr <= project.endDate) {
+                            (project.tasks || []).forEach(task => {
+                                if (task.type === 'daily' || 
+                                   (task.type === 'once' && task.date === dateStr) ||
+                                   (task.type === 'review' && date.getDay() === project.reviewDay)) {
+                                    tasks.push({ ...task, projectTitle: project.title, projectId: project.id, color: board.color });
+                                }
+                            });
+                        }
+                    });
+                });
+                // 获取临时事件
+                (appData.events || []).forEach(event => {
+                    if (event.date === dateStr) {
+                        tasks.push({ id: event.id, text: event.title, projectTitle: '临时事件', color: 'gray' });
+                    }
+                });
+                return tasks;
+            }
+            
+            function isTaskCompletedOnDate(taskId, date) {
+                const dateStr = toDateString(date);
+                return appData.taskCompletions && appData.taskCompletions[taskId]?.includes(dateStr) || false;
+            }
+
+            async function toggleTaskCompletion(taskId) {
+                const dateStr = toDateString(viewedDate);
+                if (!appData.taskCompletions[taskId]) appData.taskCompletions[taskId] = [];
+                const completedIndex = appData.taskCompletions[taskId].indexOf(dateStr);
+                if (completedIndex > -1) {
+                    appData.taskCompletions[taskId].splice(completedIndex, 1);
+                } else {
+                    appData.taskCompletions[taskId].push(dateStr);
+                }
+                await saveData();
+                renderAll();
+            }
+
+            // --- 新建项目模态框逻辑 ---
+            const modal = document.getElementById('project-modal');
+            const form = document.getElementById('project-form');
+            let currentBoardKeyForModal;
+
+            function openProjectModal(boardKey) {
+                currentBoardKeyForModal = boardKey;
+                form.reset();
+                document.getElementById('modal-tasks-container').innerHTML = '';
+                document.getElementById('modal-kpis-container').innerHTML = '';
+                addModalTaskRow();
+                addModalKpiRow();
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            }
+
+            function closeProjectModal() {
+                 modal.classList.add('opacity-0');
+                 modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+            
+            function addModalTaskRow() {
+                const container = document.getElementById('modal-tasks-container');
+                const div = document.createElement('div');
+                div.className = 'p-2 border rounded-lg';
+                div.innerHTML = `
+                    <input type="text" class="modal-task-text w-full p-2 mb-2 bg-transparent border-b" placeholder="任务描述" required>
+                    <input type="url" class="modal-task-link w-full p-2 mb-2 bg-transparent border-b" placeholder="链接 (可选)">
+                    <div class="flex items-center space-x-2">
+                        <select class="modal-task-type p-2 bg-white/50 border border-gray-300 rounded-lg">
+                            <option value="daily">每日</option>
+                            <option value="once">指定日期</option>
+                        </select>
+                        <input type="date" class="modal-task-date p-2 bg-white/50 border border-gray-300 rounded-lg hidden">
+                        <button type="button" class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+                    </div>`;
+                container.appendChild(div);
+            }
+            
+            function addModalKpiRow() {
+                const container = document.getElementById('modal-kpis-container');
+                const div = document.createElement('div');
+                div.className = 'flex items-center space-x-2';
+                div.innerHTML = `<input type="text" class="modal-kpi-text w-full p-2 bg-white/50 border border-gray-300 rounded-lg" placeholder="KPI描述" required><input type="number" class="modal-kpi-target w-32 p-2 bg-white/50 border border-gray-300 rounded-lg" placeholder="目标值" required><button type="button" class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>`;
+                container.appendChild(div);
+            }
+
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newProject = {
+                    id: `proj-${currentBoardKeyForModal}-${Date.now()}`,
+                    title: document.getElementById('project-name').value,
+                    startDate: document.getElementById('start-date').value,
+                    endDate: document.getElementById('end-date').value,
+                    reviewDay: parseInt(document.getElementById('review-day').value),
+                    tasks: [],
+                    kpis: [],
+                    reviews: []
+                };
+
+                document.querySelectorAll('#modal-tasks-container > div').forEach(row => {
+                    newProject.tasks.push({
+                        id: `task-${Date.now()}-${Math.random()}`,
+                        text: row.querySelector('.modal-task-text').value,
+                        link: row.querySelector('.modal-task-link').value,
+                        type: row.querySelector('.modal-task-type').value,
+                        date: row.querySelector('.modal-task-date').value
+                    });
+                });
+                
+                document.querySelectorAll('#modal-kpis-container > div').forEach(row => {
+                    newProject.kpis.push({
+                        id: `kpi-${Date.now()}-${Math.random()}`,
+                        text: row.querySelector('.modal-kpi-text').value,
+                        targetValue: parseFloat(row.querySelector('.modal-kpi-target').value),
+                        currentValue: 0
+                    });
+                });
+
+                if (newProject.reviewDay > -1) {
+                    newProject.tasks.push({
+                        id: `task-${Date.now()}-review`,
+                        text: `为项目"${newProject.title}"进行每周复盘`,
+                        type: 'review'
+                    });
+                }
+                
+                appData.boards[currentBoardKeyForModal].projects.push(newProject);
+                await saveData();
+                renderAll();
+                closeProjectModal();
+            });
+
+            // --- 事件监听 ---
+            function initializeAppEventListeners() {
+                document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+                
+                document.getElementById('prev-month').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
+                document.getElementById('next-month').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
+                
+                document.getElementById('calendar-grid').addEventListener('click', e => {
+                    if(e.target.dataset.date) {
+                        viewedDate = new Date(e.target.dataset.date + 'T00:00:00'); 
+                        renderAll();
+                    }
+                });
+                
+                document.getElementById('main-content').addEventListener('click', e => {
+                    if(e.target.classList.contains('add-project-btn')) {
+                        openProjectModal(e.target.dataset.boardKey);
+                    }
+                    if(e.target.classList.contains('project-tab')) {
+                        const { tab, projectId } = e.target.dataset;
+                        const projectCard = e.target.closest('.glass-pane');
+                        projectCard.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        projectCard.querySelectorAll('.project-tab-content').forEach(c => c.classList.add('hidden'));
+                        projectCard.querySelector(`[data-tab-content="${tab}"][data-project-id="${projectId}"]`).classList.remove('hidden');
+                    }
+                });
+
+                document.getElementById('main-content').addEventListener('submit', async (e) => {
+                    if (e.target.classList.contains('review-form')) {
+                        e.preventDefault();
+                        const projectId = e.target.dataset.projectId;
+                        const boardKey = getActiveBoardKey();
+                        const project = appData.boards[boardKey].projects.find(p => p.id === projectId);
+                        if (project) {
+                            if(!project.reviews) project.reviews = [];
+                            project.reviews.push({
+                                date: toDateString(new Date()),
+                                wins: e.target.elements.wins.value,
+                                challenges: e.target.elements.challenges.value,
+                                learnings: e.target.elements.learnings.value,
+                                nextSteps: e.target.elements.nextSteps.value
+                            });
+                            e.target.reset();
+                            await saveData();
+                            renderSingleBoard(boardKey);
+                        }
+                    }
+                });
+                
+                document.getElementById('main-content').addEventListener('change', async (e) => {
+                    if (e.target.classList.contains('kpi-input')) {
+                         const { projectId, kpiId } = e.target.dataset;
+                         const boardKey = getActiveBoardKey();
+                         const project = appData.boards[boardKey].projects.find(p => p.id === projectId);
+                         if(project) {
+                             const kpi = project.kpis.find(k => k.id === kpiId);
+                             if (kpi) kpi.currentValue = parseFloat(e.target.value);
+                             await saveData();
+                         }
+                    }
+                });
+                
+                document.body.addEventListener('change', e => {
+                    if (e.target.classList.contains('task-checkbox')) {
+                        toggleTaskCompletion(e.target.dataset.taskId);
+                    }
+                });
+                
+                document.getElementById('project-modal').addEventListener('click', e => {
+                    if (e.target.classList.contains('remove-row-btn')) {
+                        e.target.closest('.p-2.border, .flex.items-center').remove();
+                    }
+                });
+                
+                document.getElementById('modal-tasks-container').addEventListener('change', e => {
+                    if (e.target.classList.contains('modal-task-type')) {
+                        const row = e.target.closest('div');
+                        row.querySelector('.modal-task-date').classList.toggle('hidden', e.target.value !== 'once');
+                    }
+                });
+
+                document.getElementById('add-modal-task').addEventListener('click', addModalTaskRow);
+                document.getElementById('add-modal-kpi').addEventListener('click', addModalKpiRow);
+
+                document.getElementById('cancel-project').addEventListener('click', closeProjectModal);
+                
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetBoardId = 'board-' + item.dataset.board;
+                        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                        item.classList.add('active');
+                        document.querySelectorAll('.board-panel').forEach(panel => panel.classList.add('hidden'));
+                        document.getElementById(targetBoardId).classList.remove('hidden');
+                        renderAll();
+                    });
+                });
+
+                document.getElementById('add-event-btn').addEventListener('click', async () => {
+                    const title = prompt(`为 ${toDateString(viewedDate)} 添加一个临时事件:`);
+                    if (title) {
+                        if(!appData.events) appData.events = [];
+                        appData.events.push({
+                            id: `evt-${Date.now()}`,
+                            date: toDateString(viewedDate),
+                            title: title
+                        });
+                        await saveData();
+                        renderAll();
+                    }
+                });
+            }
+
+            // --- 工具函数 ---
+            function toDateString(date) { 
+                const offset = date.getTimezoneOffset();
+                date = new Date(date.getTime() - (offset*60*1000));
+                return date.toISOString().split('T')[0];
+            }
+            function isSameDay(d1, d2) { return toDateString(d1) === toDateString(d2); }
+            function getActiveBoardKey() {
+                const activeNav = document.querySelector('.nav-item.active');
+                return activeNav ? activeNav.dataset.board : 'home';
+            }
+        });
+    </script>
+  </body>
+</html>
+

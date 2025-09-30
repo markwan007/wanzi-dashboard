@@ -84,9 +84,16 @@ function renderAgenda() {
                             </button>
                         `;
                         
+                        // 备注显示
+                        const notesHTML = taskInfo.notes ? `<p class="text-xs text-gray-400 italic ml-4 mt-1">💡 ${taskInfo.notes}</p>` : '';
+                        
                         li.innerHTML = `
                             <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
-                            <div class="flex-grow">${linkHTML}<p class="text-sm text-gray-500">${taskInfo.projectTitle}</p></div>
+                            <div class="flex-grow">
+                                ${linkHTML}
+                                <p class="text-sm text-gray-500">${taskInfo.projectTitle}</p>
+                                ${notesHTML}
+                            </div>
                             ${reviewIconHTML}
                             ${skipButtonHTML}
                             <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>

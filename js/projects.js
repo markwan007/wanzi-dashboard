@@ -52,11 +52,17 @@ function renderSingleBoard(key) {
                  </button>
              `;
              
-             return `<li class="flex items-center">
-                        <input id="board-task-${task.id}" type="checkbox" class="custom-checkbox task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''}>
-                        ${linkHTML}
-                        ${reviewIconHTML}
-                        ${skipButtonHTML}
+             // 备注显示
+             const notesHTML = task.notes ? `<p class="text-xs text-gray-400 italic ml-8 mt-1">💡 ${task.notes}</p>` : '';
+             
+             return `<li class="flex flex-col">
+                        <div class="flex items-center">
+                            <input id="board-task-${task.id}" type="checkbox" class="custom-checkbox task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''}>
+                            ${linkHTML}
+                            ${reviewIconHTML}
+                            ${skipButtonHTML}
+                        </div>
+                        ${notesHTML}
                     </li>`
         }).join('');
 

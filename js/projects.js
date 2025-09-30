@@ -263,6 +263,53 @@ function closeBoardSettingsModal() {
     setTimeout(() => boardSettingsModal.classList.add('hidden'), 300);
 }
 
+// 删除板块
+async function deleteBoard() {
+    const boardData = window.appData.boards[currentBoardKeyForSettings];
+    const boardTitle = boardData.title;
+    const projectCount = boardData.projects?.length || 0;
+    
+    // 二次确认
+    const confirmMessage = `⚠️ 确定要删除"${boardTitle}"板块吗？\n\n此板块包含 ${projectCount} 个项目，删除后将无法恢复！\n\n请输入板块名称 "${boardTitle}" 来确认删除：`;
+    
+    const userInput = prompt(confirmMessage);
+    
+    if (userInput !== boardTitle) {
+        if (userInput !== null) {
+            alert('❌ 输入不匹配，取消删除');
+        }
+        return;
+    }
+    
+    // 删除板块
+    delete window.appData.boards[currentBoardKeyForSettings];
+    
+    // 保存到 Firebase
+    await window.firebaseUtils.saveData(window.userId, window.appData);
+    
+    // 关闭设置窗口
+    closeBoardSettingsModal();
+    
+    // 显示成功提示
+    showDeleteToast(`✓ "${boardTitle}" 板块已删除`);
+    
+    // 重新渲染整个应用
+    window.app.renderAll();
+}
+
+// 显示删除提示
+function showDeleteToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
+    toast.textContent = message;
+    
+    const container = document.getElementById('toast-container');
+    if (container) {
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+}
+
 function addModalTaskRow() {
     const container = document.getElementById('modal-tasks-container');
     const div = document.createElement('div');
@@ -389,6 +436,9 @@ function setupProjectEventListeners() {
     });
 
     document.getElementById('cancel-board-settings').addEventListener('click', closeBoardSettingsModal);
+    
+    // 删除板块按钮
+    document.getElementById('delete-board-btn').addEventListener('click', deleteBoard);
     
     document.querySelectorAll('.color-option').forEach(option => {
         option.addEventListener('click', (e) => {

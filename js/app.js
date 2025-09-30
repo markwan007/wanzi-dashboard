@@ -39,6 +39,12 @@ function initializeAppEventListeners() {
         if(e.target.classList.contains('board-settings-btn')) {
             window.projectsModule.openBoardSettingsModal(e.target.dataset.boardKey);
         }
+        if(e.target.closest('.project-edit-btn')) {
+            const btn = e.target.closest('.project-edit-btn');
+            const projectId = btn.dataset.projectId;
+            const boardKey = window.utils.getActiveBoardKey();
+            window.projectsModule.openProjectModal(boardKey, projectId);
+        }
     });
 
     // 任务复选框变化

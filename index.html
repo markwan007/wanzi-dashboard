@@ -236,7 +236,7 @@
     <!-- 新建项目模态框 -->
     <div id="project-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 hidden opacity-0">
         <div class="modal-content glass-pane rounded-xl w-full max-w-2xl p-8 transform scale-95 opacity-0">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">创建新项目</h2>
+            <h2 id="project-modal-title" class="text-2xl font-bold text-gray-900 mb-6">创建新项目</h2>
             <form id="project-form">
                 <div class="space-y-6">
                     <div>
@@ -274,7 +274,7 @@
                 </div>
                 <div class="flex justify-end space-x-4 mt-8">
                     <button type="button" id="cancel-project" class="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold">取消</button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold">创建项目</button>
+                    <button type="submit" id="submit-project-btn" class="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold">创建项目</button>
                 </div>
             </form>
         </div>

@@ -34,11 +34,18 @@ function renderSingleBoard(key) {
             <div class="p-6">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
-                    <button class="project-calendar-btn text-gray-500 hover:text-orange-600 p-1 rounded-lg hover:bg-gray-100" 
-                            data-project-id="${project.id}" 
-                            title="查看项目日历">
-                        📅
-                    </button>
+                    <div class="flex items-center space-x-1">
+                        <button class="project-edit-btn text-gray-500 hover:text-orange-600 p-1 rounded-lg hover:bg-gray-100" 
+                                data-project-id="${project.id}" 
+                                title="编辑项目">
+                            ⚙️
+                        </button>
+                        <button class="project-calendar-btn text-gray-500 hover:text-orange-600 p-1 rounded-lg hover:bg-gray-100" 
+                                data-project-id="${project.id}" 
+                                title="查看项目日历">
+                            📅
+                        </button>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-500 mb-4">${project.startDate} 到 ${project.endDate}</p>
                 
@@ -87,17 +94,35 @@ function updateAllProgressBars() {
 const modal = document.getElementById('project-modal');
 const form = document.getElementById('project-form');
 let currentBoardKeyForModal;
+let editingProjectId = null;  // 用于跟踪正在编辑的项目
 
 // 板块设置模态框相关
 const boardSettingsModal = document.getElementById('board-settings-modal');
 const boardSettingsForm = document.getElementById('board-settings-form');
 let currentBoardKeyForSettings;
 
-function openProjectModal(boardKey) {
+function openProjectModal(boardKey, projectId = null) {
     currentBoardKeyForModal = boardKey;
-    form.reset();
-    document.getElementById('modal-tasks-container').innerHTML = '';
-    addModalTaskRow();
+    editingProjectId = projectId;
+    
+    // 更新模态框标题和按钮
+    const modalTitle = document.getElementById('project-modal-title');
+    const submitBtn = document.getElementById('submit-project-btn');
+    
+    if (projectId) {
+        // 编辑模式
+        modalTitle.textContent = '编辑项目';
+        submitBtn.textContent = '保存更改';
+        loadProjectData(projectId, boardKey);
+    } else {
+        // 创建模式
+        modalTitle.textContent = '创建新项目';
+        submitBtn.textContent = '创建项目';
+        form.reset();
+        document.getElementById('modal-tasks-container').innerHTML = '';
+        addModalTaskRow();
+    }
+    
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -108,7 +133,74 @@ function openProjectModal(boardKey) {
 function closeProjectModal() {
      modal.classList.add('opacity-0');
      modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
-     setTimeout(() => modal.classList.add('hidden'), 300);
+     setTimeout(() => {
+         modal.classList.add('hidden');
+         editingProjectId = null;  // 清除编辑状态
+     }, 300);
+}
+
+// 加载项目数据到表单
+function loadProjectData(projectId, boardKey) {
+    const project = window.appData.boards[boardKey].projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    // 填充基本信息
+    document.getElementById('project-name').value = project.title;
+    document.getElementById('start-date').value = project.startDate;
+    document.getElementById('end-date').value = project.endDate;
+    document.getElementById('review-day').value = project.reviewDay ?? -1;
+    
+    // 清空任务容器
+    const tasksContainer = document.getElementById('modal-tasks-container');
+    tasksContainer.innerHTML = '';
+    
+    // 加载任务（排除复盘任务）
+    const regularTasks = (project.tasks || []).filter(task => !task.isReview);
+    
+    if (regularTasks.length === 0) {
+        // 如果没有任务，添加一个空行
+        addModalTaskRow();
+    } else {
+        regularTasks.forEach(task => {
+            addModalTaskRow();
+            const lastRow = tasksContainer.lastElementChild;
+            
+            // 填充任务数据
+            lastRow.querySelector('.modal-task-text').value = task.text;
+            lastRow.querySelector('.modal-task-link').value = task.link || '';
+            lastRow.querySelector('.modal-task-notes').value = task.notes || '';
+            lastRow.querySelector('.modal-task-frequency').value = task.frequency || 'daily';
+            lastRow.querySelector('.modal-task-time').value = task.time || '';
+            
+            // 根据频率显示相应的字段
+            const frequency = task.frequency || task.type || 'daily';
+            const dateContainer = lastRow.querySelector('.modal-task-date-container');
+            const weeklyContainer = lastRow.querySelector('.modal-task-weekly-container');
+            const monthlyContainer = lastRow.querySelector('.modal-task-monthly-container');
+            
+            // 隐藏所有容器
+            dateContainer.classList.add('hidden');
+            weeklyContainer.classList.add('hidden');
+            monthlyContainer.classList.add('hidden');
+            
+            // 根据频率显示和填充相应字段
+            if (frequency === 'once') {
+                dateContainer.classList.remove('hidden');
+                lastRow.querySelector('.modal-task-date').value = task.date || '';
+            } else if (frequency === 'weekly') {
+                weeklyContainer.classList.remove('hidden');
+                if (task.weekdays) {
+                    task.weekdays.forEach(day => {
+                        const checkbox = lastRow.querySelector(`.modal-task-weekday[value="${day}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+            } else if (frequency === 'monthly') {
+                monthlyContainer.classList.remove('hidden');
+                lastRow.querySelector('.modal-task-monthday').value = task.monthDay || 1;
+            }
+        });
+    }
 }
 
 // 板块设置相关函数
@@ -232,6 +324,56 @@ function setupProjectEventListeners() {
     // 项目表单提交
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        if (editingProjectId) {
+            // 编辑模式：更新现有项目
+            await updateExistingProject();
+        } else {
+            // 创建模式：创建新项目
+            await createNewProject();
+        }
+    });
+
+    // 模态框事件
+    document.getElementById('project-modal').addEventListener('click', e => {
+        if (e.target.classList.contains('remove-row-btn')) {
+            e.target.closest('.p-4.border-2').remove();
+        }
+    });
+
+    document.getElementById('add-modal-task').addEventListener('click', addModalTaskRow);
+    document.getElementById('cancel-project').addEventListener('click', closeProjectModal);
+
+    // 板块设置事件监听器
+    boardSettingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newTitle = document.getElementById('board-title').value;
+        const newColor = document.querySelector('.color-option.ring-4')?.dataset.color || 'purple';
+        
+        if (currentBoardKeyForSettings && window.appData.boards[currentBoardKeyForSettings]) {
+            window.appData.boards[currentBoardKeyForSettings].title = newTitle;
+            window.appData.boards[currentBoardKeyForSettings].color = newColor;
+            await window.firebaseUtils.saveData(window.userId, window.appData);
+            window.app.renderAll();
+            closeBoardSettingsModal();
+        }
+    });
+
+    document.getElementById('cancel-board-settings').addEventListener('click', closeBoardSettingsModal);
+    
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('ring-4', 'ring-orange-500');
+            });
+            option.classList.add('ring-4', 'ring-orange-500');
+        });
+    });
+}
+
+// 创建新项目
+async function createNewProject() {
         const newProject = {
             id: `proj-${currentBoardKeyForModal}-${Date.now()}`,
             title: document.getElementById('project-name').value,
@@ -283,53 +425,68 @@ function setupProjectEventListeners() {
         await window.firebaseUtils.saveData(window.userId, window.appData);
         window.app.renderAll();
         closeProjectModal();
-    });
+}
 
-    // 模态框事件
-    document.getElementById('project-modal').addEventListener('click', e => {
-        if (e.target.classList.contains('remove-row-btn')) {
-            e.target.closest('.p-4.border-2').remove();
+// 更新现有项目
+async function updateExistingProject() {
+    const project = window.appData.boards[currentBoardKeyForModal].projects.find(p => p.id === editingProjectId);
+    if (!project) return;
+    
+    // 保留现有的复盘记录
+    const existingReviews = project.reviews || [];
+    
+    // 更新基本信息
+    project.title = document.getElementById('project-name').value;
+    project.startDate = document.getElementById('start-date').value;
+    project.endDate = document.getElementById('end-date').value;
+    project.reviewDay = parseInt(document.getElementById('review-day').value);
+    
+    // 重新构建任务列表（排除旧的复盘任务）
+    project.tasks = [];
+    
+    document.querySelectorAll('#modal-tasks-container > div').forEach(row => {
+        const frequency = row.querySelector('.modal-task-frequency').value;
+        const task = {
+            id: `task-${Date.now()}-${Math.random()}`,
+            text: row.querySelector('.modal-task-text').value,
+            link: row.querySelector('.modal-task-link').value || '',
+            notes: row.querySelector('.modal-task-notes').value || '',
+            frequency: frequency,
+            time: row.querySelector('.modal-task-time').value || ''
+        };
+        
+        if (frequency === 'once') {
+            task.date = row.querySelector('.modal-task-date').value;
+        } else if (frequency === 'weekly') {
+            const weekdays = Array.from(row.querySelectorAll('.modal-task-weekday:checked')).map(cb => parseInt(cb.value));
+            task.weekdays = weekdays;
+        } else if (frequency === 'monthly') {
+            task.monthDay = parseInt(row.querySelector('.modal-task-monthday').value) || 1;
         }
+        
+        project.tasks.push(task);
     });
-
-    document.getElementById('add-modal-task').addEventListener('click', addModalTaskRow);
-    document.getElementById('cancel-project').addEventListener('click', closeProjectModal);
-
-    // 板块设置事件监听器
-    boardSettingsForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const newTitle = document.getElementById('board-title').value;
-        const selectedColor = document.querySelector('.color-option.border-orange-500').dataset.color;
-        
-        // 更新板块数据
-        window.appData.boards[currentBoardKeyForSettings].title = newTitle;
-        window.appData.boards[currentBoardKeyForSettings].color = selectedColor;
-        
-        // 更新导航栏标题
-        const navItem = document.querySelector(`[data-board="${currentBoardKeyForSettings}"]`);
-        if (navItem) {
-            navItem.textContent = newTitle;
-        }
-        
-        // 保存数据并重新渲染
-        await window.firebaseUtils.saveData(window.userId, window.appData);
-        window.projectsModule.renderSingleBoard(currentBoardKeyForSettings);
-        closeBoardSettingsModal();
-    });
-
-    // 颜色选择器事件
-    document.querySelectorAll('.color-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.color-option').forEach(b => {
-                b.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
-                b.classList.add('border-gray-300');
-            });
-            btn.classList.remove('border-gray-300');
-            btn.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
+    
+    // 重新生成复盘任务（如果设置了复盘日）
+    if (project.reviewDay > -1) {
+        project.tasks.push({
+            id: `task-${Date.now()}-review`,
+            text: `为项目"${project.title}"进行每周复盘`,
+            frequency: 'weekly',
+            weekdays: [project.reviewDay],
+            isReview: true,
+            link: '',
+            notes: '点击日志图标📔开始复盘',
+            time: ''
         });
-    });
-
-    document.getElementById('cancel-board-settings').addEventListener('click', closeBoardSettingsModal);
+    }
+    
+    // 恢复复盘记录
+    project.reviews = existingReviews;
+    
+    await window.firebaseUtils.saveData(window.userId, window.appData);
+    window.app.renderAll();
+    closeProjectModal();
 }
 
 // 导出项目管理模块

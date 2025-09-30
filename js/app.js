@@ -52,6 +52,7 @@ function initializeAppEventListeners() {
     window.calendarModule.setupCalendarEventListeners();
     window.projectsModule.setupProjectEventListeners();
     window.reviewModule.setupReviewEventListeners();
+    window.projectCalendarModule.setupProjectCalendarEventListeners();
     window.authModule.setupLogout();
 }
 

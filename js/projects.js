@@ -32,7 +32,14 @@ function renderSingleBoard(key) {
         return `
         <div class="glass-pane rounded-xl overflow-hidden glass-pane-hover border-t-4 ${colors.border}">
             <div class="p-6">
-                <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
+                <div class="flex items-center justify-between mb-1">
+                    <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
+                    <button class="project-calendar-btn text-gray-500 hover:text-orange-600 p-1 rounded-lg hover:bg-gray-100" 
+                            data-project-id="${project.id}" 
+                            title="查看项目日历">
+                        📅
+                    </button>
+                </div>
                 <p class="text-xs text-gray-500 mb-4">${project.startDate} 到 ${project.endDate}</p>
                 
 

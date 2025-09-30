@@ -49,9 +49,21 @@ function renderAgenda() {
             // 备注 tooltip
             const tooltipAttr = taskInfo.notes ? `title="${taskInfo.notes}"` : '';
             
-            const linkHTML = taskInfo.link ? 
-                `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : 
-                `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>`;
+            // 任务文本和链接
+            let linkHTML = '';
+            if (taskInfo.links && taskInfo.links.length > 0) {
+                // 多链接显示
+                const linksHtml = taskInfo.links.map(link => 
+                    `<a href="${link.url}" target="_blank" class="text-xs text-orange-500 hover:text-orange-700 underline ml-2" title="${link.name}">${link.name}</a>`
+                ).join(' ');
+                linkHTML = `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>${linksHtml}`;
+            } else if (taskInfo.link) {
+                // 兼容旧的单链接格式
+                linkHTML = `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+            } else {
+                // 无链接
+                linkHTML = `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>`;
+            }
 
                         // 为复盘任务添加日志图标
                         const reviewIconHTML = taskInfo.isReview ? `

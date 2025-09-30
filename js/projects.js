@@ -17,10 +17,21 @@ function renderSingleBoard(key) {
              // 备注 tooltip
              const tooltipAttr = task.notes ? `title="${task.notes}"` : '';
              
-             // 链接或标签
-             const linkHTML = task.link ? 
-                 `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : 
-                 `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>`;
+             // 任务文本和链接
+             let linkHTML = '';
+             if (task.links && task.links.length > 0) {
+                 // 多链接显示
+                 const linksHtml = task.links.map(link => 
+                     `<a href="${link.url}" target="_blank" class="text-xs text-orange-500 hover:text-orange-700 underline ml-2" title="${link.name}">${link.name}</a>`
+                 ).join(' ');
+                 linkHTML = `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>${linksHtml}`;
+             } else if (task.link) {
+                 // 兼容旧的单链接格式
+                 linkHTML = `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
+             } else {
+                 // 无链接
+                 linkHTML = `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>`;
+             }
              
              // 复盘任务的日志图标
              const reviewIconHTML = task.isReview ? `
@@ -215,10 +226,20 @@ function loadProjectData(projectId, boardKey) {
             
             // 填充任务数据
             lastRow.querySelector('.modal-task-text').value = task.text;
-            lastRow.querySelector('.modal-task-link').value = task.link || '';
             lastRow.querySelector('.modal-task-notes').value = task.notes || '';
             lastRow.querySelector('.modal-task-frequency').value = task.frequency || 'daily';
             lastRow.querySelector('.modal-task-time').value = task.time || '';
+            
+            // 加载链接
+            const linksList = lastRow.querySelector('.modal-task-links-list');
+            if (task.links && task.links.length > 0) {
+                task.links.forEach(link => {
+                    addTaskLinkRow(linksList, link.name, link.url);
+                });
+            } else if (task.link) {
+                // 兼容旧的单链接格式
+                addTaskLinkRow(linksList, '链接', task.link);
+            }
             
             // 根据频率显示相应的字段
             const frequency = task.frequency || task.type || 'daily';
@@ -362,6 +383,23 @@ async function deleteProject(projectId, boardKey) {
 }
 
 
+// 添加任务链接行
+function addTaskLinkRow(linksList, linkName = '', linkUrl = '') {
+    const linkDiv = document.createElement('div');
+    linkDiv.className = 'flex items-center space-x-2 task-link-row';
+    linkDiv.innerHTML = `
+        <input type="text" class="task-link-name flex-1 p-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400" placeholder="链接名称" value="${linkName}">
+        <input type="url" class="task-link-url flex-1 p-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400" placeholder="https://..." value="${linkUrl}">
+        <button type="button" class="remove-link-btn text-red-500 hover:text-red-700 font-bold text-lg">&times;</button>
+    `;
+    linksList.appendChild(linkDiv);
+    
+    // 删除链接事件
+    linkDiv.querySelector('.remove-link-btn').addEventListener('click', () => {
+        linkDiv.remove();
+    });
+}
+
 function addModalTaskRow() {
     const container = document.getElementById('modal-tasks-container');
     const div = document.createElement('div');
@@ -371,7 +409,18 @@ function addModalTaskRow() {
             <input type="text" class="modal-task-text flex-1 p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="任务描述 *" required>
             <button type="button" class="remove-row-btn ml-2 text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
         </div>
-        <input type="url" class="modal-task-link w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="🔗 任务链接（可选）">
+        
+        <!-- 多链接区域 -->
+        <div class="modal-task-links-container space-y-2">
+            <div class="flex items-center justify-between">
+                <label class="text-xs text-gray-600">🔗 任务链接（可选）</label>
+                <button type="button" class="add-task-link-btn text-xs text-orange-500 hover:text-orange-700 font-medium">+ 添加链接</button>
+            </div>
+            <div class="modal-task-links-list space-y-2">
+                <!-- 链接将在这里动态添加 -->
+            </div>
+        </div>
+        
         <textarea class="modal-task-notes w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" rows="2" placeholder="📝 任务备注（可选）"></textarea>
         <div class="grid grid-cols-2 gap-2">
             <div>
@@ -445,6 +494,14 @@ function addModalTaskRow() {
             monthlyContainer.classList.remove('hidden');
         }
     });
+    
+    // 添加链接按钮事件
+    const addLinkBtn = div.querySelector('.add-task-link-btn');
+    const linksList = div.querySelector('.modal-task-links-list');
+    
+    addLinkBtn.addEventListener('click', () => {
+        addTaskLinkRow(linksList);
+    });
 }
 
 
@@ -514,10 +571,21 @@ async function createNewProject() {
 
         document.querySelectorAll('#modal-tasks-container > div').forEach(row => {
             const frequency = row.querySelector('.modal-task-frequency').value;
+            
+            // 收集链接
+            const links = [];
+            row.querySelectorAll('.task-link-row').forEach(linkRow => {
+                const name = linkRow.querySelector('.task-link-name').value.trim();
+                const url = linkRow.querySelector('.task-link-url').value.trim();
+                if (name && url) {
+                    links.push({ name, url });
+                }
+            });
+            
             const task = {
                 id: `task-${Date.now()}-${Math.random()}`,
                 text: row.querySelector('.modal-task-text').value,
-                link: row.querySelector('.modal-task-link').value || '',
+                links: links, // 多链接数组
                 notes: row.querySelector('.modal-task-notes').value || '',
                 frequency: frequency,
                 time: row.querySelector('.modal-task-time').value || ''
@@ -575,10 +643,21 @@ async function updateExistingProject() {
     
     document.querySelectorAll('#modal-tasks-container > div').forEach((row, index) => {
         const frequency = row.querySelector('.modal-task-frequency').value;
+        
+        // 收集链接
+        const links = [];
+        row.querySelectorAll('.task-link-row').forEach(linkRow => {
+            const name = linkRow.querySelector('.task-link-name').value.trim();
+            const url = linkRow.querySelector('.task-link-url').value.trim();
+            if (name && url) {
+                links.push({ name, url });
+            }
+        });
+        
         const task = {
             id: row.dataset.taskId || `task-${Date.now()}-${Math.random()}`, // 保留现有ID或生成新ID
             text: row.querySelector('.modal-task-text').value,
-            link: row.querySelector('.modal-task-link').value || '',
+            links: links, // 多链接数组
             notes: row.querySelector('.modal-task-notes').value || '',
             frequency: frequency,
             time: row.querySelector('.modal-task-time').value || ''

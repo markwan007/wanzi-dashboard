@@ -9,6 +9,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 # Environment variables will be injected at build time
 [build.processing]

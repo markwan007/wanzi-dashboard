@@ -59,7 +59,7 @@ function renderSingleBoard(key) {
         `).join('');
 
         return `
-        <div class="glass-pane rounded-xl overflow-hidden glass-pane-hover border-t-4 ${colors.border}">
+        <div class="glass-pane rounded-xl overflow-hidden glass-pane-hover border-t-4 ${colors.border} relative">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-1">
                     <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
@@ -84,6 +84,18 @@ function renderSingleBoard(key) {
                     <div class="progress-bar-inner bg-gradient-to-r ${colors.gradient} h-2.5 rounded-full" data-project-id="${project.id}" style="width: 0%"></div>
                 </div>
             </div>
+            <!-- 项目删除按钮 -->
+            <button class="project-delete-btn absolute bottom-3 right-3 text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" 
+                    data-project-id="${project.id}" 
+                    data-board-key="${boardKey}"
+                    title="删除项目">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
         </div>`
     }).join('');
 
@@ -318,6 +330,41 @@ function showDeleteToast(message) {
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+}
+
+// 删除项目
+async function deleteProject(projectId, boardKey) {
+    const board = window.appData.boards[boardKey];
+    const project = board.projects.find(p => p.id === projectId);
+    
+    if (!project) return;
+    
+    const projectTitle = project.title;
+    const taskCount = project.tasks?.length || 0;
+    
+    // 二次确认
+    const confirmMessage = `⚠️ 确定要删除项目"${projectTitle}"吗？\n\n此项目包含 ${taskCount} 个任务，删除后将无法恢复！\n\n请输入项目名称 "${projectTitle}" 来确认删除：`;
+    
+    const userInput = prompt(confirmMessage);
+    
+    if (userInput !== projectTitle) {
+        if (userInput !== null) {
+            alert('❌ 输入不匹配，取消删除');
+        }
+        return;
+    }
+    
+    // 删除项目
+    board.projects = board.projects.filter(p => p.id !== projectId);
+    
+    // 保存到 Firebase
+    await window.firebaseUtils.saveData(window.userId, window.appData);
+    
+    // 显示成功提示
+    showDeleteToast(`✓ "${projectTitle}" 项目已删除`);
+    
+    // 重新渲染整个应用
+    window.app.renderAll();
 }
 
 
@@ -591,5 +638,6 @@ window.projectsModule = {
     openProjectModal,
     openBoardSettingsModal,
     deleteBoard,
+    deleteProject,
     setupProjectEventListeners
 };

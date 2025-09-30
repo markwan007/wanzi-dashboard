@@ -49,6 +49,12 @@ function initializeAppEventListeners() {
             const boardKey = window.utils.getActiveBoardKey();
             window.projectsModule.openProjectModal(boardKey, projectId);
         }
+        if(e.target.closest('.project-delete-btn')) {
+            const btn = e.target.closest('.project-delete-btn');
+            const projectId = btn.dataset.projectId;
+            const boardKey = btn.dataset.boardKey;
+            window.projectsModule.deleteProject(projectId, boardKey);
+        }
     });
 
     // 任务复选框变化

@@ -277,11 +277,23 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            console.log('Firebase config:', firebaseConfig);
+            
             // --- Firebase 初始化 ---
-            firebase.initializeApp(firebaseConfig);
+            try {
+                firebase.initializeApp(firebaseConfig);
+                console.log('Firebase 初始化成功');
+            } catch (error) {
+                console.error('Firebase 初始化失败:', error);
+                return;
+            }
+            
             const db = firebase.firestore();
             const auth = firebase.auth();
             const googleProvider = new firebase.auth.GoogleAuthProvider();
+            
+            console.log('Firebase 服务初始化完成');
             
             // --- 全局状态 ---
             let appData;
@@ -317,26 +329,55 @@
                 }
             });
 
-            document.getElementById('login-btn').addEventListener('click', e => {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                auth.signInWithEmailAndPassword(email, password)
-                    .catch(error => alert(`登录失败: ${error.message}`));
+            // 检查按钮是否存在
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const googleBtn = document.getElementById('google-login-btn');
+            
+            console.log('按钮检查:', {
+                loginBtn: !!loginBtn,
+                registerBtn: !!registerBtn,
+                googleBtn: !!googleBtn
             });
 
-            document.getElementById('register-btn').addEventListener('click', e => {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                auth.createUserWithEmailAndPassword(email, password)
-                    .catch(error => alert(`注册失败: ${error.message}`));
-            });
+            if (loginBtn) {
+                loginBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    auth.signInWithEmailAndPassword(email, password)
+                        .catch(error => alert(`登录失败: ${error.message}`));
+                });
+            }
 
-            document.getElementById('google-login-btn').addEventListener('click', () => {
-                auth.signInWithPopup(googleProvider)
-                    .catch(error => alert(`Google 登录失败: ${error.message}`));
-            });
+            if (registerBtn) {
+                registerBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .catch(error => alert(`注册失败: ${error.message}`));
+                });
+            }
+
+            if (googleBtn) {
+                googleBtn.addEventListener('click', () => {
+                    console.log('Google 登录按钮被点击');
+                    console.log('Firebase auth:', auth);
+                    console.log('Google provider:', googleProvider);
+                    
+                    auth.signInWithPopup(googleProvider)
+                        .then(result => {
+                            console.log('Google 登录成功:', result);
+                        })
+                        .catch(error => {
+                            console.error('Google 登录失败:', error);
+                            alert(`Google 登录失败: ${error.message}`);
+                        });
+                });
+            } else {
+                console.error('Google 登录按钮未找到');
+            }
             
             // --- 数据管理 (Firebase) ---
             async function loadData() {

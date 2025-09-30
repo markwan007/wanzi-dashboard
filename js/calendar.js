@@ -47,11 +47,22 @@ function renderAgenda() {
             const colors = window.utils.colorMap[taskInfo.color] || window.utils.colorMap.gray;
             const linkHTML = taskInfo.link ? `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}">${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}">${taskInfo.text}</label>`;
 
-            li.innerHTML = `
-                <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
-                <div class="flex-grow">${linkHTML}<p class="text-sm text-gray-500">${taskInfo.projectTitle}</p></div>
-                <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
-            `;
+                        // 为复盘任务添加日志图标
+                        const reviewIconHTML = taskInfo.isReview ? `
+                            <button class="review-journal-btn p-2 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors" 
+                                    data-task-id="${taskInfo.id}" 
+                                    data-project-id="${taskInfo.projectId}"
+                                    title="打开复盘日志">
+                                📔
+                            </button>
+                        ` : '';
+                        
+                        li.innerHTML = `
+                            <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
+                            <div class="flex-grow">${linkHTML}<p class="text-sm text-gray-500">${taskInfo.projectTitle}</p></div>
+                            ${reviewIconHTML}
+                            <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
+                        `;
             agendaList.appendChild(li);
         });
     } else {

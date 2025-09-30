@@ -51,6 +51,7 @@ function initializeAppEventListeners() {
     // 设置各个模块的事件监听器
     window.calendarModule.setupCalendarEventListeners();
     window.projectsModule.setupProjectEventListeners();
+    window.reviewModule.setupReviewEventListeners();
     window.authModule.setupLogout();
 }
 

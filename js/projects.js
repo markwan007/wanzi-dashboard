@@ -263,7 +263,12 @@ function setupProjectEventListeners() {
             newProject.tasks.push({
                 id: `task-${Date.now()}-review`,
                 text: `为项目"${newProject.title}"进行每周复盘`,
-                type: 'review'
+                frequency: 'weekly',
+                weekdays: [newProject.reviewDay],
+                isReview: true,  // 标记为复盘任务
+                link: '',
+                notes: '点击日志图标📔开始复盘',
+                time: ''
             });
         }
         

@@ -34,8 +34,15 @@ function openReviewJournal(projectId) {
     // 计算并显示本周数据统计
     renderWeeklyStats(project, boardKey);
     
+    // 显示当前日期
+    const today = new Date();
+    const dateDisplay = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+    document.getElementById('review-date-display').textContent = dateDisplay;
+    
     // 清空表单
     reviewJournalForm.reset();
+    document.getElementById('selected-mood').value = '';
+    document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected-mood'));
     
     // 渲染历史记录
     renderReviewHistory(project.reviews || []);
@@ -166,44 +173,67 @@ function renderReviewHistory(reviews) {
     const historyList = document.getElementById('review-history-list');
     
     if (!reviews || reviews.length === 0) {
-        historyList.innerHTML = '<p class="text-gray-400 text-center py-8">暂无历史记录</p>';
+        historyList.innerHTML = `
+            <div class="text-center py-12 text-gray-400">
+                <div class="text-6xl mb-4">📖</div>
+                <p>还没有复盘记录</p>
+                <p class="text-sm mt-2">开始写下第一篇吧！</p>
+            </div>
+        `;
         return;
     }
     
     // 按时间倒序排列
     const sortedReviews = [...reviews].sort((a, b) => b.date.localeCompare(a.date));
     
-    historyList.innerHTML = sortedReviews.map((review, index) => `
-        <div class="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+    historyList.innerHTML = sortedReviews.map((review, index) => {
+        const moodEmoji = review.mood ? getMoodEmoji(review.mood) : '';
+        const content = review.content || formatOldReview(review);
+        
+        return `
+        <div class="bg-amber-50 rounded-lg p-5 border-l-4 border-orange-400 hover:shadow-lg transition-all" style="background-image: repeating-linear-gradient(transparent, transparent 31px, #f59e0b11 31px, #f59e0b11 32px);">
             <div class="flex justify-between items-start mb-3">
-                <div>
-                    <h4 class="font-semibold text-gray-900">第 ${reviews.length - index} 次复盘</h4>
-                    <p class="text-sm text-gray-500">${review.date}</p>
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl">${moodEmoji || '📝'}</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-900">第 ${reviews.length - index} 页</h4>
+                        <p class="text-sm text-gray-500">${review.date}</p>
+                    </div>
                 </div>
-                <button class="delete-review-btn text-red-500 hover:text-red-700 text-sm" data-review-date="${review.date}" title="删除">
-                    ✕
+                <button class="delete-review-btn text-gray-400 hover:text-red-500 transition-colors" data-review-date="${review.date}" title="删除这一页">
+                    🗑️
                 </button>
             </div>
-            <div class="space-y-2 text-sm">
-                <div>
-                    <span class="font-medium text-green-600">🎉 成就:</span>
-                    <p class="text-gray-700 mt-1">${review.wins}</p>
-                </div>
-                <div>
-                    <span class="font-medium text-amber-600">💪 挑战:</span>
-                    <p class="text-gray-700 mt-1">${review.challenges}</p>
-                </div>
-                <div>
-                    <span class="font-medium text-blue-600">💡 经验:</span>
-                    <p class="text-gray-700 mt-1">${review.learnings}</p>
-                </div>
-                <div>
-                    <span class="font-medium text-purple-600">🎯 计划:</span>
-                    <p class="text-gray-700 mt-1">${review.nextSteps}</p>
-                </div>
+            <div class="bg-white/60 backdrop-blur-sm rounded p-4 text-gray-700 whitespace-pre-wrap leading-relaxed" style="font-family: 'Segoe UI', 'SF Pro Text', system-ui, -apple-system;">
+                ${content}
             </div>
         </div>
-    `).join('');
+    `}).join('');
+}
+
+// 获取情绪表情
+function getMoodEmoji(mood) {
+    const moods = {
+        'excited': '😊',
+        'calm': '😌',
+        'tired': '😓',
+        'frustrated': '😤',
+        'proud': '🎉'
+    };
+    return moods[mood] || '';
+}
+
+// 格式化旧版本的结构化复盘（向后兼容）
+function formatOldReview(review) {
+    if (review.content) return review.content;
+    
+    let text = '';
+    if (review.wins) text += `🎉 值得庆祝的事：\n${review.wins}\n\n`;
+    if (review.challenges) text += `💪 遇到的挑战：\n${review.challenges}\n\n`;
+    if (review.learnings) text += `💡 新的思考：\n${review.learnings}\n\n`;
+    if (review.nextSteps) text += `🎯 下周想做的事：\n${review.nextSteps}`;
+    
+    return text || '（旧版本复盘记录）';
 }
 
 // 保存复盘
@@ -218,10 +248,8 @@ async function saveReview(event) {
     const formData = new FormData(reviewJournalForm);
     const newReview = {
         date: window.utils.toDateString(new Date()),
-        wins: formData.get('wins'),
-        challenges: formData.get('challenges'),
-        learnings: formData.get('learnings'),
-        nextSteps: formData.get('nextSteps')
+        content: formData.get('content'),
+        mood: formData.get('mood') || ''
     };
     
     project.reviews.push(newReview);
@@ -230,12 +258,14 @@ async function saveReview(event) {
     
     // 清空表单
     reviewJournalForm.reset();
+    document.getElementById('selected-mood').value = '';
+    document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected-mood'));
     
     // 重新渲染历史记录
     renderReviewHistory(project.reviews);
     
     // 显示成功提示
-    showToast('复盘已保存！');
+    showToast('💾 这一页已经保存好了！');
 }
 
 // 删除复盘
@@ -275,10 +305,34 @@ function setupReviewEventListeners() {
     // 关闭按钮
     document.getElementById('close-review-journal').addEventListener('click', closeReviewJournal);
     
+    // 清空按钮
+    document.getElementById('clear-review').addEventListener('click', () => {
+        if (confirm('确定要清空当前内容吗？')) {
+            reviewJournalForm.reset();
+            document.getElementById('selected-mood').value = '';
+            document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected-mood'));
+        }
+    });
+    
+    // 情绪选择
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('mood-btn')) {
+            const mood = e.target.dataset.mood;
+            document.getElementById('selected-mood').value = mood;
+            
+            // 更新选中状态
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('selected-mood', 'ring-2', 'ring-orange-400');
+            });
+            e.target.classList.add('selected-mood', 'ring-2', 'ring-orange-400');
+        }
+    });
+    
     // 删除复盘
     document.getElementById('review-history-list').addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-review-btn')) {
-            const reviewDate = e.target.dataset.reviewDate;
+        if (e.target.classList.contains('delete-review-btn') || e.target.closest('.delete-review-btn')) {
+            const btn = e.target.classList.contains('delete-review-btn') ? e.target : e.target.closest('.delete-review-btn');
+            const reviewDate = btn.dataset.reviewDate;
             deleteReview(reviewDate);
         }
     });

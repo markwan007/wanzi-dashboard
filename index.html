@@ -194,26 +194,63 @@
             
             <!-- 复盘写作区 -->
             <div class="mb-6">
-                <h3 class="font-semibold text-gray-700 mb-4">✍️ 撰写本次复盘</h3>
-                <form id="review-journal-form" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">🎉 本周成就</label>
-                        <textarea name="wins" rows="2" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="这周完成了什么？有什么进展或突破？" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">💪 遇到的挑战</label>
-                        <textarea name="challenges" rows="2" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="遇到了什么困难或阻碍？" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">💡 学到的经验</label>
-                        <textarea name="learnings" rows="2" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="有什么新的认识或收获？" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">🎯 下周计划</label>
-                        <textarea name="nextSteps" rows="2" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="下周准备做什么？" required></textarea>
-                    </div>
-                    <button type="submit" class="w-full py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold">保存复盘</button>
-                </form>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-700 flex items-center">
+                        <span class="text-2xl mr-2">✍️</span>
+                        <span>写下这一周的故事</span>
+                    </h3>
+                    <span class="text-sm text-gray-400" id="review-date-display"></span>
+                </div>
+                
+                <!-- 笔记本风格的写作区 -->
+                <div class="bg-amber-50 rounded-lg p-6 shadow-inner border-2 border-amber-100" style="background-image: repeating-linear-gradient(transparent, transparent 31px, #f59e0b22 31px, #f59e0b22 32px);">
+                    <form id="review-journal-form" class="space-y-6">
+                        <!-- 自由写作区 -->
+                        <div class="bg-white/60 backdrop-blur-sm rounded p-4 border border-amber-200">
+                            <textarea 
+                                name="content" 
+                                rows="12" 
+                                class="w-full p-0 bg-transparent border-0 focus:outline-none focus:ring-0 text-gray-800 leading-8 resize-none"
+                                style="font-family: 'Segoe UI', 'SF Pro Text', system-ui, -apple-system;"
+                                placeholder="亲爱的自己，
+
+这一周...
+
+🎉 值得庆祝的事：
+
+💪 遇到的挑战：
+
+💡 新的思考：
+
+🎯 下周想做的事：
+
+"
+                                required></textarea>
+                        </div>
+                        
+                        <!-- 情绪标签（可选） -->
+                        <div class="flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded p-3 border border-amber-200">
+                            <span class="text-sm text-gray-600">本周感觉：</span>
+                            <div class="flex space-x-2">
+                                <button type="button" class="mood-btn text-2xl hover:scale-125 transition-transform" data-mood="excited" title="充实">😊</button>
+                                <button type="button" class="mood-btn text-2xl hover:scale-125 transition-transform" data-mood="calm" title="平静">😌</button>
+                                <button type="button" class="mood-btn text-2xl hover:scale-125 transition-transform" data-mood="tired" title="疲惫">😓</button>
+                                <button type="button" class="mood-btn text-2xl hover:scale-125 transition-transform" data-mood="frustrated" title="沮丧">😤</button>
+                                <button type="button" class="mood-btn text-2xl hover:scale-125 transition-transform" data-mood="proud" title="自豪">🎉</button>
+                            </div>
+                            <input type="hidden" name="mood" id="selected-mood" value="">
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="clear-review" class="px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium transition-colors">
+                                清空
+                            </button>
+                            <button type="submit" class="px-6 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-medium shadow-md transition-all">
+                                💾 保存这一页
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
             
             <!-- 历史记录区 -->

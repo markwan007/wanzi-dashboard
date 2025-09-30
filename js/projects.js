@@ -10,13 +10,42 @@ function renderSingleBoard(key) {
     const colors = window.utils.colorMap[data.color];
 
     const projectsHTML = (data.projects || []).map(project => {
-        const tasksForProjectOnDate = window.calendarModule.getTasksForDate(window.calendarModule.getViewedDate()).filter(t => t.projectId === project.id && t.type !== 'review');
+        const tasksForProjectOnDate = window.calendarModule.getTasksForDate(window.calendarModule.getViewedDate()).filter(t => t.projectId === project.id);
         const tasksHTML = tasksForProjectOnDate.map(task => {
              const isCompleted = window.calendarModule.isTaskCompletedOnDate(task.id, window.calendarModule.getViewedDate());
-             const linkHTML = task.link ? `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}">${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}">${task.text}</label>`;
+             
+             // 备注 tooltip
+             const tooltipAttr = task.notes ? `title="${task.notes}"` : '';
+             
+             // 链接或标签
+             const linkHTML = task.link ? 
+                 `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : 
+                 `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>`;
+             
+             // 复盘任务的日志图标
+             const reviewIconHTML = task.isReview ? `
+                 <button class="review-journal-btn p-1 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors ml-auto" 
+                         data-task-id="${task.id}" 
+                         data-project-id="${project.id}"
+                         title="打开复盘日志">
+                     📔
+                 </button>
+             ` : '';
+             
+             // 跳过按钮（复盘任务不显示跳过按钮）
+             const skipButtonHTML = task.isReview ? '' : `
+                 <button class="skip-task-btn text-gray-400 hover:text-red-500 ml-auto p-1 text-sm transition-colors" 
+                         data-task-id="${task.id}" 
+                         title="今天跳过此任务">
+                     ✕
+                 </button>
+             `;
+             
              return `<li class="flex items-center">
                         <input id="board-task-${task.id}" type="checkbox" class="custom-checkbox task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''}>
                         ${linkHTML}
+                        ${reviewIconHTML}
+                        ${skipButtonHTML}
                     </li>`
         }).join('');
 

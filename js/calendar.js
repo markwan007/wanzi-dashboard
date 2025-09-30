@@ -45,7 +45,13 @@ function renderAgenda() {
             li.className = 'flex items-start space-x-3';
             const isCompleted = isTaskCompletedOnDate(taskInfo.id, viewedDate);
             const colors = window.utils.colorMap[taskInfo.color] || window.utils.colorMap.gray;
-            const linkHTML = taskInfo.link ? `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}">${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}">${taskInfo.text}</label>`;
+            
+            // 备注 tooltip
+            const tooltipAttr = taskInfo.notes ? `title="${taskInfo.notes}"` : '';
+            
+            const linkHTML = taskInfo.link ? 
+                `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : 
+                `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>`;
 
                         // 为复盘任务添加日志图标
                         const reviewIconHTML = taskInfo.isReview ? `

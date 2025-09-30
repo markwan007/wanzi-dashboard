@@ -85,7 +85,7 @@ function renderSingleBoard(key) {
                 </div>
             </div>
             <!-- 项目删除按钮 -->
-            <button class="project-delete-btn absolute bottom-3 right-3 text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" 
+            <button class="project-delete-btn absolute top-3 right-3 text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" 
                     data-project-id="${project.id}" 
                     data-board-key="${key}"
                     title="删除项目">

@@ -39,6 +39,10 @@ function initializeAppEventListeners() {
         if(e.target.classList.contains('board-settings-btn')) {
             window.projectsModule.openBoardSettingsModal(e.target.dataset.boardKey);
         }
+        if(e.target.classList.contains('board-delete-btn')) {
+            const boardKey = e.target.dataset.boardKey;
+            window.projectsModule.deleteBoard(boardKey);
+        }
         if(e.target.closest('.project-edit-btn')) {
             const btn = e.target.closest('.project-edit-btn');
             const projectId = btn.dataset.projectId;

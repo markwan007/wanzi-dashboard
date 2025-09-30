@@ -98,7 +98,17 @@ function renderSingleBoard(key) {
                     </svg>
                 </button>
             </div>
-            <button class="add-project-btn bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600" data-board-key="${key}">+ 新建项目</button>
+            <div class="flex items-center space-x-3">
+                <button class="board-delete-btn text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" data-board-key="${key}" title="删除板块">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
+                <button class="add-project-btn bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600" data-board-key="${key}">+ 新建项目</button>
+            </div>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">${projectsHTML}</div>
     `;
@@ -264,8 +274,8 @@ function closeBoardSettingsModal() {
 }
 
 // 删除板块
-async function deleteBoard() {
-    const boardData = window.appData.boards[currentBoardKeyForSettings];
+async function deleteBoard(boardKey) {
+    const boardData = window.appData.boards[boardKey];
     const boardTitle = boardData.title;
     const projectCount = boardData.projects?.length || 0;
     
@@ -282,13 +292,10 @@ async function deleteBoard() {
     }
     
     // 删除板块
-    delete window.appData.boards[currentBoardKeyForSettings];
+    delete window.appData.boards[boardKey];
     
     // 保存到 Firebase
     await window.firebaseUtils.saveData(window.userId, window.appData);
-    
-    // 关闭设置窗口
-    closeBoardSettingsModal();
     
     // 显示成功提示
     showDeleteToast(`✓ "${boardTitle}" 板块已删除`);
@@ -309,6 +316,7 @@ function showDeleteToast(message) {
         setTimeout(() => toast.remove(), 3000);
     }
 }
+
 
 function addModalTaskRow() {
     const container = document.getElementById('modal-tasks-container');
@@ -436,9 +444,6 @@ function setupProjectEventListeners() {
     });
 
     document.getElementById('cancel-board-settings').addEventListener('click', closeBoardSettingsModal);
-    
-    // 删除板块按钮
-    document.getElementById('delete-board-btn').addEventListener('click', deleteBoard);
     
     document.querySelectorAll('.color-option').forEach(option => {
         option.addEventListener('click', (e) => {
@@ -575,5 +580,6 @@ window.projectsModule = {
     updateAllProgressBars,
     openProjectModal,
     openBoardSettingsModal,
+    deleteBoard,
     setupProjectEventListeners
 };

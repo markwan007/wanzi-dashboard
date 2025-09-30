@@ -112,6 +112,8 @@ function getTasksForDate(date) {
     const dayOfMonth = date.getDate(); // 1-31
     const tasks = [];
     
+    console.log('🔍 获取任务 - 日期:', dateStr, '星期:', dayOfWeek, '日:', dayOfMonth);
+    
     // 获取今日跳过的任务列表
     const skippedTasks = (window.appData.skippedTasks && window.appData.skippedTasks[dateStr]) || [];
     
@@ -124,20 +126,26 @@ function getTasksForDate(date) {
                 (project.tasks || []).forEach(task => {
                     let shouldShow = false;
                     
+                    console.log('  📋 检查任务:', task.text, '频率:', task.frequency);
+                    
                     // 新的频率系统
                     if (task.frequency) {
                         switch (task.frequency) {
                             case 'daily':
                                 shouldShow = true;
+                                console.log('    ✅ 每日任务 - 显示');
                                 break;
                             case 'once':
                                 shouldShow = task.date === dateStr;
+                                console.log('    📅 一次性 - 任务日期:', task.date, '今天:', dateStr, '显示:', shouldShow);
                                 break;
                             case 'weekly':
                                 shouldShow = task.weekdays && task.weekdays.includes(dayOfWeek);
+                                console.log('    📆 每周 - 任务星期:', task.weekdays, '今天星期:', dayOfWeek, '显示:', shouldShow);
                                 break;
                             case 'monthly':
                                 shouldShow = task.monthDay === dayOfMonth;
+                                console.log('    📆 每月 - 任务日:', task.monthDay, '今天日:', dayOfMonth, '显示:', shouldShow);
                                 break;
                         }
                     } 

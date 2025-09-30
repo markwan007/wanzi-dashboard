@@ -704,6 +704,10 @@ async function updateExistingProject() {
     // 恢复复盘记录
     project.reviews = existingReviews;
     
+    console.log('✅ 项目更新完成:', project.title);
+    console.log('📝 任务列表:', project.tasks);
+    console.log('📅 项目日期:', project.startDate, '到', project.endDate);
+    
     await window.firebaseUtils.saveData(window.userId, window.appData);
     window.app.renderAll();
     closeProjectModal();

@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo 'No build step required for static HTML'"
+  command = "node build.js"
 
 [[redirects]]
   from = "/*"
@@ -9,3 +9,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
+
+# Environment variables will be injected at build time
+[build.processing]
+  skip_processing = false

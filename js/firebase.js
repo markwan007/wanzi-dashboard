@@ -5,11 +5,21 @@ function initializeFirebase() {
     console.log('页面加载完成');
     console.log('Firebase config:', firebaseConfig);
     
+    // 验证Firebase配置
+    if (typeof validateFirebaseConfig === 'function' && !validateFirebaseConfig()) {
+        console.error('Firebase配置验证失败，无法初始化');
+        return false;
+    }
+    
     try {
         firebase.initializeApp(firebaseConfig);
         console.log('Firebase 初始化成功');
     } catch (error) {
         console.error('Firebase 初始化失败:', error);
+        // 显示用户友好的错误信息
+        if (error.code === 'auth/invalid-api-key') {
+            console.error('API密钥无效，请检查环境变量配置');
+        }
         return false;
     }
     

@@ -20,16 +20,6 @@ function renderSingleBoard(key) {
                     </li>`
         }).join('');
 
-        const kpisHTML = (project.kpis || []).map(kpi => `
-            <div class="text-sm">
-                <label class="font-medium text-gray-600">${kpi.text}</label>
-                <div class="flex items-center mt-1">
-                    <input type="number" value="${kpi.currentValue}" class="kpi-input w-20 p-1 text-center bg-white/50 border border-gray-300 rounded-lg" data-project-id="${project.id}" data-kpi-id="${kpi.id}">
-                    <span class="mx-2 text-gray-400">/</span>
-                    <span class="font-semibold">${kpi.targetValue}</span>
-                </div>
-            </div>
-        `).join('');
         
         const reviewsHTML = (project.reviews || []).slice().reverse().map(review => `
             <div class="p-3 bg-gray-50 rounded-lg mt-2">
@@ -45,30 +35,10 @@ function renderSingleBoard(key) {
                 <h4 class="text-lg font-semibold text-gray-900">${project.title}</h4>
                 <p class="text-xs text-gray-500 mb-4">${project.startDate} 到 ${project.endDate}</p>
                 
-                <div class="flex border-b mb-4 text-sm font-medium text-gray-500">
-                    <button class="project-tab active" data-tab="tasks" data-project-id="${project.id}">任务</button>
-                    <button class="project-tab ml-4" data-tab="kpis" data-project-id="${project.id}">KPIs</button>
-                    <button class="project-tab ml-4" data-tab="reviews" data-project-id="${project.id}">复盘日志</button>
-                </div>
 
-                <div class="project-tab-content" data-tab-content="tasks" data-project-id="${project.id}">
-                    <ul class="space-y-4 mb-6 min-h-[50px]">${tasksHTML || '<p class="text-sm text-gray-400">今天没有此项目的任务。</p>'}</ul>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="progress-bar-inner bg-gradient-to-r ${colors.gradient} h-2.5 rounded-full" data-project-id="${project.id}" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="project-tab-content hidden" data-tab-content="kpis" data-project-id="${project.id}">
-                    <div class="space-y-4">${kpisHTML || '<p class="text-sm text-gray-400">未设定KPI。</p>'}</div>
-                </div>
-                <div class="project-tab-content hidden" data-tab-content="reviews" data-project-id="${project.id}">
-                    <div class="max-h-40 overflow-y-auto mb-4">${reviewsHTML || '<p class="text-sm text-gray-400">暂无复盘记录。</p>'}</div>
-                    <form class="review-form" data-project-id="${project.id}">
-                        <textarea class="w-full p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="本周成就..." name="wins" required></textarea>
-                        <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="遇到的挑战..." name="challenges" required></textarea>
-                        <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="学到的经验..." name="learnings" required></textarea>
-                        <textarea class="w-full mt-2 p-2 bg-white/50 border border-gray-300 rounded-lg text-sm" rows="1" placeholder="下周计划..." name="nextSteps" required></textarea>
-                        <button type="submit" class="mt-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-lg">保存复盘</button>
-                    </form>
+                <ul class="space-y-4 mb-6 min-h-[50px]">${tasksHTML || '<p class="text-sm text-gray-400">今天没有此项目的任务。</p>'}</ul>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="progress-bar-inner bg-gradient-to-r ${colors.gradient} h-2.5 rounded-full" data-project-id="${project.id}" style="width: 0%"></div>
                 </div>
             </div>
         </div>`
@@ -76,12 +46,21 @@ function renderSingleBoard(key) {
 
     panel.innerHTML = `
         <div class="flex justify-between items-center mb-8">
-            <h3 class="text-2xl font-bold text-gray-900">${data.title}</h3>
+            <div class="flex items-center space-x-3">
+                <h3 class="text-2xl font-bold text-gray-900">${data.title}</h3>
+                <button class="board-settings-btn text-gray-500 hover:text-orange-600 p-2 rounded-lg hover:bg-gray-100" data-board-key="${key}" title="板块设置">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
             <button class="add-project-btn bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600" data-board-key="${key}">+ 新建项目</button>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">${projectsHTML}</div>
     `;
-    updateAllProgressBars();
+    // 延迟更新进度条，确保DOM已渲染
+    setTimeout(() => updateAllProgressBars(), 100);
 }
 
 function updateAllProgressBars() {
@@ -102,13 +81,16 @@ const modal = document.getElementById('project-modal');
 const form = document.getElementById('project-form');
 let currentBoardKeyForModal;
 
+// 板块设置模态框相关
+const boardSettingsModal = document.getElementById('board-settings-modal');
+const boardSettingsForm = document.getElementById('board-settings-form');
+let currentBoardKeyForSettings;
+
 function openProjectModal(boardKey) {
     currentBoardKeyForModal = boardKey;
     form.reset();
     document.getElementById('modal-tasks-container').innerHTML = '';
-    document.getElementById('modal-kpis-container').innerHTML = '';
     addModalTaskRow();
-    addModalKpiRow();
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -122,31 +104,122 @@ function closeProjectModal() {
      setTimeout(() => modal.classList.add('hidden'), 300);
 }
 
+// 板块设置相关函数
+function openBoardSettingsModal(boardKey) {
+    currentBoardKeyForSettings = boardKey;
+    const boardData = window.appData.boards[boardKey];
+    
+    // 填充当前设置
+    document.getElementById('board-title').value = boardData.title;
+    
+    // 设置当前颜色为选中状态
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
+        btn.classList.add('border-gray-300');
+        if (btn.dataset.color === boardData.color) {
+            btn.classList.remove('border-gray-300');
+            btn.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
+        }
+    });
+    
+    boardSettingsModal.classList.remove('hidden');
+    setTimeout(() => {
+        boardSettingsModal.classList.remove('opacity-0');
+        boardSettingsModal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeBoardSettingsModal() {
+    boardSettingsModal.classList.add('opacity-0');
+    boardSettingsModal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
+    setTimeout(() => boardSettingsModal.classList.add('hidden'), 300);
+}
+
 function addModalTaskRow() {
     const container = document.getElementById('modal-tasks-container');
     const div = document.createElement('div');
-    div.className = 'p-2 border rounded-lg';
+    div.className = 'p-4 border-2 border-gray-200 rounded-lg bg-gray-50/50 space-y-3';
     div.innerHTML = `
-        <input type="text" class="modal-task-text w-full p-2 mb-2 bg-transparent border-b" placeholder="任务描述" required>
-        <input type="url" class="modal-task-link w-full p-2 mb-2 bg-transparent border-b" placeholder="链接 (可选)">
-        <div class="flex items-center space-x-2">
-            <select class="modal-task-type p-2 bg-white/50 border border-gray-300 rounded-lg">
-                <option value="daily">每日</option>
-                <option value="once">指定日期</option>
-            </select>
-            <input type="date" class="modal-task-date p-2 bg-white/50 border border-gray-300 rounded-lg hidden">
-            <button type="button" class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
-        </div>`;
+        <div class="flex items-start justify-between">
+            <input type="text" class="modal-task-text flex-1 p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="任务描述 *" required>
+            <button type="button" class="remove-row-btn ml-2 text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+        </div>
+        <input type="url" class="modal-task-link w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" placeholder="🔗 任务链接（可选）">
+        <textarea class="modal-task-notes w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400" rows="2" placeholder="📝 任务备注（可选）"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="text-xs text-gray-600 mb-1 block">重复频率</label>
+                <select class="modal-task-frequency w-full p-2 bg-white border border-gray-300 rounded-lg text-sm">
+                    <option value="once">一次性</option>
+                    <option value="daily">每日</option>
+                    <option value="weekly">每周</option>
+                    <option value="monthly">每月</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-600 mb-1 block">执行时间（可选）</label>
+                <input type="time" class="modal-task-time w-full p-2 bg-white border border-gray-300 rounded-lg text-sm">
+            </div>
+        </div>
+        <div class="modal-task-date-container hidden">
+            <label class="text-xs text-gray-600 mb-1 block">指定日期</label>
+            <input type="date" class="modal-task-date w-full p-2 bg-white border border-gray-300 rounded-lg text-sm">
+        </div>
+        <div class="modal-task-weekly-container hidden">
+            <label class="text-xs text-gray-600 mb-1 block">选择星期</label>
+            <div class="flex flex-wrap gap-2">
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="1"><span class="text-sm">周一</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="2"><span class="text-sm">周二</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="3"><span class="text-sm">周三</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="4"><span class="text-sm">周四</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="5"><span class="text-sm">周五</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="6"><span class="text-sm">周六</span>
+                </label>
+                <label class="flex items-center space-x-1 cursor-pointer">
+                    <input type="checkbox" class="modal-task-weekday" value="0"><span class="text-sm">周日</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-task-monthly-container hidden">
+            <label class="text-xs text-gray-600 mb-1 block">每月第几天</label>
+            <input type="number" class="modal-task-monthday w-full p-2 bg-white border border-gray-300 rounded-lg text-sm" min="1" max="31" placeholder="1-31">
+        </div>
+    `;
     container.appendChild(div);
+    
+    // 添加频率切换逻辑
+    const frequencySelect = div.querySelector('.modal-task-frequency');
+    const dateContainer = div.querySelector('.modal-task-date-container');
+    const weeklyContainer = div.querySelector('.modal-task-weekly-container');
+    const monthlyContainer = div.querySelector('.modal-task-monthly-container');
+    
+    frequencySelect.addEventListener('change', () => {
+        const frequency = frequencySelect.value;
+        dateContainer.classList.add('hidden');
+        weeklyContainer.classList.add('hidden');
+        monthlyContainer.classList.add('hidden');
+        
+        if (frequency === 'once') {
+            dateContainer.classList.remove('hidden');
+        } else if (frequency === 'weekly') {
+            weeklyContainer.classList.remove('hidden');
+        } else if (frequency === 'monthly') {
+            monthlyContainer.classList.remove('hidden');
+        }
+    });
 }
 
-function addModalKpiRow() {
-    const container = document.getElementById('modal-kpis-container');
-    const div = document.createElement('div');
-    div.className = 'flex items-center space-x-2';
-    div.innerHTML = `<input type="text" class="modal-kpi-text w-full p-2 bg-white/50 border border-gray-300 rounded-lg" placeholder="KPI描述" required><input type="number" class="modal-kpi-target w-32 p-2 bg-white/50 border border-gray-300 rounded-lg" placeholder="目标值" required><button type="button" class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>`;
-    container.appendChild(div);
-}
 
 function setupProjectEventListeners() {
     // 项目表单提交
@@ -159,27 +232,31 @@ function setupProjectEventListeners() {
             endDate: document.getElementById('end-date').value,
             reviewDay: parseInt(document.getElementById('review-day').value),
             tasks: [],
-            kpis: [],
             reviews: []
         };
 
         document.querySelectorAll('#modal-tasks-container > div').forEach(row => {
-            newProject.tasks.push({
+            const frequency = row.querySelector('.modal-task-frequency').value;
+            const task = {
                 id: `task-${Date.now()}-${Math.random()}`,
                 text: row.querySelector('.modal-task-text').value,
-                link: row.querySelector('.modal-task-link').value,
-                type: row.querySelector('.modal-task-type').value,
-                date: row.querySelector('.modal-task-date').value
-            });
-        });
-        
-        document.querySelectorAll('#modal-kpis-container > div').forEach(row => {
-            newProject.kpis.push({
-                id: `kpi-${Date.now()}-${Math.random()}`,
-                text: row.querySelector('.modal-kpi-text').value,
-                targetValue: parseFloat(row.querySelector('.modal-kpi-target').value),
-                currentValue: 0
-            });
+                link: row.querySelector('.modal-task-link').value || '',
+                notes: row.querySelector('.modal-task-notes').value || '',
+                frequency: frequency,
+                time: row.querySelector('.modal-task-time').value || ''
+            };
+            
+            // 根据频率类型添加额外字段
+            if (frequency === 'once') {
+                task.date = row.querySelector('.modal-task-date').value;
+            } else if (frequency === 'weekly') {
+                const weekdays = Array.from(row.querySelectorAll('.modal-task-weekday:checked')).map(cb => parseInt(cb.value));
+                task.weekdays = weekdays;
+            } else if (frequency === 'monthly') {
+                task.monthDay = parseInt(row.querySelector('.modal-task-monthday').value) || 1;
+            }
+            
+            newProject.tasks.push(task);
         });
 
         if (newProject.reviewDay > -1) {
@@ -199,20 +276,48 @@ function setupProjectEventListeners() {
     // 模态框事件
     document.getElementById('project-modal').addEventListener('click', e => {
         if (e.target.classList.contains('remove-row-btn')) {
-            e.target.closest('.p-2.border, .flex.items-center').remove();
-        }
-    });
-    
-    document.getElementById('modal-tasks-container').addEventListener('change', e => {
-        if (e.target.classList.contains('modal-task-type')) {
-            const row = e.target.closest('div');
-            row.querySelector('.modal-task-date').classList.toggle('hidden', e.target.value !== 'once');
+            e.target.closest('.p-4.border-2').remove();
         }
     });
 
     document.getElementById('add-modal-task').addEventListener('click', addModalTaskRow);
-    document.getElementById('add-modal-kpi').addEventListener('click', addModalKpiRow);
     document.getElementById('cancel-project').addEventListener('click', closeProjectModal);
+
+    // 板块设置事件监听器
+    boardSettingsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newTitle = document.getElementById('board-title').value;
+        const selectedColor = document.querySelector('.color-option.border-orange-500').dataset.color;
+        
+        // 更新板块数据
+        window.appData.boards[currentBoardKeyForSettings].title = newTitle;
+        window.appData.boards[currentBoardKeyForSettings].color = selectedColor;
+        
+        // 更新导航栏标题
+        const navItem = document.querySelector(`[data-board="${currentBoardKeyForSettings}"]`);
+        if (navItem) {
+            navItem.textContent = newTitle;
+        }
+        
+        // 保存数据并重新渲染
+        await window.firebaseUtils.saveData(window.userId, window.appData);
+        window.projectsModule.renderSingleBoard(currentBoardKeyForSettings);
+        closeBoardSettingsModal();
+    });
+
+    // 颜色选择器事件
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.color-option').forEach(b => {
+                b.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
+                b.classList.add('border-gray-300');
+            });
+            btn.classList.remove('border-gray-300');
+            btn.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
+        });
+    });
+
+    document.getElementById('cancel-board-settings').addEventListener('click', closeBoardSettingsModal);
 }
 
 // 导出项目管理模块
@@ -221,5 +326,6 @@ window.projectsModule = {
     renderSingleBoard,
     updateAllProgressBars,
     openProjectModal,
+    openBoardSettingsModal,
     setupProjectEventListeners
 };

@@ -62,7 +62,10 @@ function renderAgenda() {
 function getTasksForDate(date) {
     if (!window.appData) return [];
     const dateStr = window.utils.toDateString(date);
+    const dayOfWeek = date.getDay(); // 0-6 (Sunday-Saturday)
+    const dayOfMonth = date.getDate(); // 1-31
     const tasks = [];
+    
     // 获取项目任务
     Object.keys(window.appData.boards).forEach(boardKey => {
         const board = window.appData.boards[boardKey];
@@ -70,21 +73,61 @@ function getTasksForDate(date) {
             const viewedDateStr = window.utils.toDateString(date);
             if(project.startDate && project.endDate && viewedDateStr >= project.startDate && viewedDateStr <= project.endDate) {
                 (project.tasks || []).forEach(task => {
-                    if (task.type === 'daily' || 
-                       (task.type === 'once' && task.date === dateStr) ||
-                       (task.type === 'review' && date.getDay() === project.reviewDay)) {
+                    let shouldShow = false;
+                    
+                    // 新的频率系统
+                    if (task.frequency) {
+                        switch (task.frequency) {
+                            case 'daily':
+                                shouldShow = true;
+                                break;
+                            case 'once':
+                                shouldShow = task.date === dateStr;
+                                break;
+                            case 'weekly':
+                                shouldShow = task.weekdays && task.weekdays.includes(dayOfWeek);
+                                break;
+                            case 'monthly':
+                                shouldShow = task.monthDay === dayOfMonth;
+                                break;
+                        }
+                    } 
+                    // 兼容旧的type系统
+                    else if (task.type) {
+                        if (task.type === 'daily') {
+                            shouldShow = true;
+                        } else if (task.type === 'once' && task.date === dateStr) {
+                            shouldShow = true;
+                        } else if (task.type === 'review' && dayOfWeek === project.reviewDay) {
+                            shouldShow = true;
+                        }
+                    }
+                    
+                    if (shouldShow) {
                         tasks.push({ ...task, projectTitle: project.title, projectId: project.id, color: board.color });
                     }
                 });
             }
         });
     });
+    
     // 获取临时事件
     (window.appData.events || []).forEach(event => {
         if (event.date === dateStr) {
             tasks.push({ id: event.id, text: event.title, projectTitle: '临时事件', color: 'gray' });
         }
     });
+    
+    // 按执行时间排序
+    tasks.sort((a, b) => {
+        if (a.time && b.time) {
+            return a.time.localeCompare(b.time);
+        }
+        if (a.time) return -1;
+        if (b.time) return 1;
+        return 0;
+    });
+    
     return tasks;
 }
 
@@ -145,5 +188,8 @@ window.calendarModule = {
     renderAgenda,
     setupCalendarEventListeners,
     getViewedDate: () => viewedDate,
-    setViewedDate: (date) => { viewedDate = date; }
+    setViewedDate: (date) => { viewedDate = date; },
+    getTasksForDate,
+    isTaskCompletedOnDate,
+    toggleTaskCompletion
 };

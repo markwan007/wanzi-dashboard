@@ -7,6 +7,7 @@ function renderAll() {
     window.calendarModule.renderCalendar();
     window.calendarModule.renderAgenda();
     window.projectsModule.renderAllBoards();
+    window.projectsModule.updateAllProgressBars();
 }
 
 // 数据加载
@@ -35,53 +36,11 @@ function initializeAppEventListeners() {
         if(e.target.classList.contains('add-project-btn')) {
             window.projectsModule.openProjectModal(e.target.dataset.boardKey);
         }
-        if(e.target.classList.contains('project-tab')) {
-            const { tab, projectId } = e.target.dataset;
-            const projectCard = e.target.closest('.glass-pane');
-            projectCard.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
-            e.target.classList.add('active');
-            projectCard.querySelectorAll('.project-tab-content').forEach(c => c.classList.add('hidden'));
-            projectCard.querySelector(`[data-tab-content="${tab}"][data-project-id="${projectId}"]`).classList.remove('hidden');
+        if(e.target.classList.contains('board-settings-btn')) {
+            window.projectsModule.openBoardSettingsModal(e.target.dataset.boardKey);
         }
     });
 
-    // 表单提交
-    document.getElementById('main-content').addEventListener('submit', async (e) => {
-        if (e.target.classList.contains('review-form')) {
-            e.preventDefault();
-            const projectId = e.target.dataset.projectId;
-            const boardKey = window.utils.getActiveBoardKey();
-            const project = appData.boards[boardKey].projects.find(p => p.id === projectId);
-            if (project) {
-                if(!project.reviews) project.reviews = [];
-                project.reviews.push({
-                    date: window.utils.toDateString(new Date()),
-                    wins: e.target.elements.wins.value,
-                    challenges: e.target.elements.challenges.value,
-                    learnings: e.target.elements.learnings.value,
-                    nextSteps: e.target.elements.nextSteps.value
-                });
-                e.target.reset();
-                await window.firebaseUtils.saveData(window.userId, appData);
-                window.projectsModule.renderSingleBoard(boardKey);
-            }
-        }
-    });
-    
-    // KPI 输入变化
-    document.getElementById('main-content').addEventListener('change', async (e) => {
-        if (e.target.classList.contains('kpi-input')) {
-             const { projectId, kpiId } = e.target.dataset;
-             const boardKey = window.utils.getActiveBoardKey();
-             const project = appData.boards[boardKey].projects.find(p => p.id === projectId);
-             if(project) {
-                 const kpi = project.kpis.find(k => k.id === kpiId);
-                 if (kpi) kpi.currentValue = parseFloat(e.target.value);
-                 await window.firebaseUtils.saveData(window.userId, appData);
-             }
-        }
-    });
-    
     // 任务复选框变化
     document.body.addEventListener('change', e => {
         if (e.target.classList.contains('task-checkbox')) {

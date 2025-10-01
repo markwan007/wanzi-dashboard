@@ -63,8 +63,39 @@ function renderAgenda() {
     const agendaList = document.getElementById('agenda-list');
     const tasksForViewedDate = getTasksForDate(viewedDate);
     
-    document.getElementById('viewed-date-display').textContent = `正在查看 ${viewedDate.toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-    document.getElementById('welcome-title').textContent = window.utils.isSameDay(viewedDate, new Date()) ? '你好，欢迎回来！' : `计划回顾`;
+    const isToday = window.utils.isSameDay(viewedDate, new Date());
+    const dateStr = viewedDate.toLocaleDateString('zh-CN', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    // 更新标题和emoji
+    const welcomeTitle = document.getElementById('welcome-title');
+    const dateEmoji = document.getElementById('date-emoji');
+    const dateDisplay = document.getElementById('viewed-date-display');
+    
+    if (isToday) {
+        welcomeTitle.textContent = '你好，欢迎回来！';
+        dateEmoji.textContent = '✨';
+        dateDisplay.querySelector('span').textContent = dateStr;
+    } else {
+        // 根据星期几选择不同的emoji和文案
+        const dayOfWeek = viewedDate.getDay();
+        const emojis = ['🌙', '💫', '⭐', '🌟', '✨', '🎯', '🌈'];
+        const titles = [
+            '回顾往事 📅',
+            '展望未来 🔮',
+            '时光机 ⏰',
+            '那一天 📆',
+            '日子速览 👀'
+        ];
+        
+        welcomeTitle.textContent = titles[Math.floor(Math.random() * titles.length)];
+        dateEmoji.textContent = emojis[dayOfWeek];
+        dateDisplay.querySelector('span').textContent = dateStr;
+    }
 
     agendaList.innerHTML = '';
     if (tasksForViewedDate.length > 0) {

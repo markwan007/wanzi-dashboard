@@ -204,8 +204,27 @@ function getTasksForDate(date) {
         }
     });
     
-    // 按执行时间排序
+    // 定义板块顺序
+    const boardOrder = {
+        'purple': 1,  // 创业
+        'blue': 2,    // 财务
+        'indigo': 3,  // 学习
+        'rose': 4,    // 健康
+        'amber': 5,   // 其他
+        'gray': 6     // 临时事件
+    };
+    
+    // 先按板块顺序排序，再按执行时间排序
     tasks.sort((a, b) => {
+        // 首先按板块顺序
+        const orderA = boardOrder[a.color] || 999;
+        const orderB = boardOrder[b.color] || 999;
+        
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+        
+        // 同一板块内按时间排序
         if (a.time && b.time) {
             return a.time.localeCompare(b.time);
         }

@@ -256,6 +256,21 @@ async function toggleTaskCompletion(taskId) {
 
 // 跳过任务（今天不做）
 async function skipTask(taskId) {
+    // 检查是否是临时事件（ID以evt-开头）
+    if (taskId.startsWith('evt-')) {
+        // 临时事件直接删除
+        if (window.appData.events) {
+            window.appData.events = window.appData.events.filter(e => e.id !== taskId);
+            await window.firebaseUtils.saveData(window.userId, window.appData);
+            renderAgenda();
+            
+            // 显示删除提示
+            showDeleteEventToast();
+        }
+        return;
+    }
+    
+    // 普通任务添加到跳过列表
     const dateStr = window.utils.toDateString(viewedDate);
     
     if (!window.appData.skippedTasks) {
@@ -281,6 +296,19 @@ function showSkipToast() {
     const toast = document.createElement('div');
     toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
     toast.textContent = '✓ 任务已跳过（明天会重新出现）';
+    
+    const container = document.getElementById('toast-container');
+    if (container) {
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+}
+
+// 显示删除临时事件的提示
+function showDeleteEventToast() {
+    const toast = document.createElement('div');
+    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
+    toast.textContent = '✓ 临时事件已删除';
     
     const container = document.getElementById('toast-container');
     if (container) {

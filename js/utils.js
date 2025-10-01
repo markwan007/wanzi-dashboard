@@ -16,6 +16,7 @@ function getActiveBoardKey() {
 
 // 颜色映射 - 彩虹色系：红橙黄绿青蓝紫
 const colorMap = {
+    // 新的彩虹色系
     red: { gradient: 'from-red-500 to-red-600', dot: 'bg-red-500', border: 'border-red-500' },
     orange: { gradient: 'from-orange-500 to-orange-600', dot: 'bg-orange-500', border: 'border-orange-500' },
     yellow: { gradient: 'from-yellow-400 to-yellow-500', dot: 'bg-yellow-400', border: 'border-yellow-400' },
@@ -23,7 +24,11 @@ const colorMap = {
     cyan: { gradient: 'from-cyan-500 to-cyan-600', dot: 'bg-cyan-500', border: 'border-cyan-500' },
     blue: { gradient: 'from-blue-500 to-blue-600', dot: 'bg-blue-500', border: 'border-blue-500' },
     purple: { gradient: 'from-purple-500 to-purple-600', dot: 'bg-purple-500', border: 'border-purple-500' },
-    gray: { gradient: 'from-gray-500 to-gray-600', dot: 'bg-gray-500', border: 'border-gray-500'}
+    gray: { gradient: 'from-gray-500 to-gray-600', dot: 'bg-gray-500', border: 'border-gray-500'},
+    // 旧颜色名称兼容（为已有数据提供映射）
+    indigo: { gradient: 'from-yellow-400 to-yellow-500', dot: 'bg-yellow-400', border: 'border-yellow-400' },
+    rose: { gradient: 'from-green-500 to-green-600', dot: 'bg-green-500', border: 'border-green-500' },
+    amber: { gradient: 'from-cyan-500 to-cyan-600', dot: 'bg-cyan-500', border: 'border-cyan-500' }
 };
 
 // XSS防护：转义HTML特殊字符

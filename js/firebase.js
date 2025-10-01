@@ -40,11 +40,11 @@ async function loadData(userId) {
     } else {
         const defaultData = {
             boards: {
-                startup: { title: "创业", color: "purple", projects: [] },
-                finance: { title: "财务", color: "blue", projects: [] },
-                learning: { title: "学习", color: "indigo", projects: [] },
-                health: { title: "健康", color: "rose", projects: [] },
-                misc: { title: "其他", color: "amber", projects: [] },
+                startup: { title: "创业", color: "red", projects: [] },
+                finance: { title: "财务", color: "orange", projects: [] },
+                learning: { title: "学习", color: "yellow", projects: [] },
+                health: { title: "健康", color: "green", projects: [] },
+                misc: { title: "其他", color: "cyan", projects: [] },
             },
             events: [], 
             taskCompletions: {} 

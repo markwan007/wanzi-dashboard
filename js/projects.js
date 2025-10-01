@@ -15,23 +15,11 @@ function renderSingleBoard(key) {
              const isCompleted = window.calendarModule.isTaskCompletedOnDate(task.id, window.calendarModule.getViewedDate());
              
              // 备注 tooltip
-             const tooltipAttr = task.notes ? `title="${task.notes}"` : '';
+             const tooltipAttr = task.notes ? `title="${window.utils.escapeHtml(task.notes)}"` : '';
              
-             // 任务文本和链接
-             let linkHTML = '';
-             if (task.links && task.links.length > 0) {
-                 // 多链接显示
-                 const linksHtml = task.links.map(link => 
-                     `<a href="${link.url}" target="_blank" class="text-xs text-orange-500 hover:text-orange-700 underline ml-2" title="${link.name}">${link.name}</a>`
-                 ).join(' ');
-                 linkHTML = `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>${linksHtml}`;
-             } else if (task.link) {
-                 // 兼容旧的单链接格式
-                 linkHTML = `<a href="${task.link}" target="_blank" class="task-label ml-4 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
-             } else {
-                 // 无链接
-                 linkHTML = `<label for="board-task-${task.id}" class="task-label ml-4 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${task.text}</label>`;
-             }
+             // 使用共享函数构建任务链接HTML（需要手动添加ml-4类）
+             const linkHTMLBase = window.utils.buildTaskLinksHtml(task, 'board-task-', isCompleted, tooltipAttr);
+             const linkHTML = linkHTMLBase.replace('class="task-label', 'class="task-label ml-4');
              
              // 复盘任务的日志图标
              const reviewIconHTML = task.isReview ? `
@@ -52,8 +40,8 @@ function renderSingleBoard(key) {
                  </button>
              `;
              
-             // 备注显示
-             const notesHTML = task.notes ? `<p class="text-xs text-gray-400 italic ml-8 mt-1">💡 ${task.notes}</p>` : '';
+             // 备注显示（使用共享函数）
+             const notesHTML = window.utils.buildTaskNotesHtml(task.notes, 'ml-8');
              
              return `<li class="flex flex-col">
                         <div class="flex items-center">
@@ -340,17 +328,9 @@ async function deleteBoard(boardKey) {
     window.app.renderAll();
 }
 
-// 显示删除提示
+// 显示删除提示（使用共享Toast函数）
 function showDeleteToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
-    toast.textContent = message;
-    
-    const container = document.getElementById('toast-container');
-    if (container) {
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+    window.utils.showToast(message);
 }
 
 // 删除项目

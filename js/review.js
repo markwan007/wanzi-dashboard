@@ -285,16 +285,9 @@ async function deleteReview(reviewDate) {
     showToast('复盘已删除');
 }
 
-// 显示提示
+// 显示提示（使用共享Toast函数）
 function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
-    toast.textContent = message;
-    
-    const container = document.getElementById('toast-container');
-    container.appendChild(toast);
-    
-    setTimeout(() => toast.remove(), 3000);
+    window.utils.showToast(message);
 }
 
 // 设置事件监听器

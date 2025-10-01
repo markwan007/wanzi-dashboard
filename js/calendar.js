@@ -106,23 +106,10 @@ function renderAgenda() {
             const colors = window.utils.colorMap[taskInfo.color] || window.utils.colorMap.gray;
             
             // 备注 tooltip
-            const tooltipAttr = taskInfo.notes ? `title="${taskInfo.notes}"` : '';
+            const tooltipAttr = taskInfo.notes ? `title="${window.utils.escapeHtml(taskInfo.notes)}"` : '';
             
-            // 任务文本和链接
-            let linkHTML = '';
-            if (taskInfo.links && taskInfo.links.length > 0) {
-                // 多链接显示
-                const linksHtml = taskInfo.links.map(link => 
-                    `<a href="${link.url}" target="_blank" class="text-xs text-orange-500 hover:text-orange-700 underline ml-2" title="${link.name}">${link.name}</a>`
-                ).join(' ');
-                linkHTML = `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>${linksHtml}`;
-            } else if (taskInfo.link) {
-                // 兼容旧的单链接格式
-                linkHTML = `<a href="${taskInfo.link}" target="_blank" class="task-label font-medium text-gray-800 cursor-pointer hover:text-orange-600 flex items-center ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ml-1 opacity-50"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`;
-            } else {
-                // 无链接
-                linkHTML = `<label for="agenda-${taskInfo.id}" class="task-label font-medium text-gray-800 cursor-pointer ${isCompleted ? 'completed' : ''}" ${tooltipAttr}>${taskInfo.text}</label>`;
-            }
+            // 使用共享函数构建任务链接HTML
+            const linkHTML = window.utils.buildTaskLinksHtml(taskInfo, 'agenda-', isCompleted, tooltipAttr);
 
                         // 为复盘任务添加日志图标
                         const reviewIconHTML = taskInfo.isReview ? `
@@ -143,8 +130,8 @@ function renderAgenda() {
                             </button>
                         `;
                         
-                        // 备注显示
-                        const notesHTML = taskInfo.notes ? `<p class="text-xs text-gray-400 italic ml-4 mt-1">💡 ${taskInfo.notes}</p>` : '';
+                        // 备注显示（使用共享函数）
+                        const notesHTML = window.utils.buildTaskNotesHtml(taskInfo.notes, 'ml-4');
                         
                         li.innerHTML = `
                             <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
@@ -322,30 +309,14 @@ async function skipTask(taskId) {
     }
 }
 
-// 显示跳过任务的提示
+// 显示跳过任务的提示（使用共享Toast函数）
 function showSkipToast() {
-    const toast = document.createElement('div');
-    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
-    toast.textContent = '✓ 任务已跳过（明天会重新出现）';
-    
-    const container = document.getElementById('toast-container');
-    if (container) {
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+    window.utils.showToast('✓ 任务已跳过（明天会重新出现）');
 }
 
-// 显示删除临时事件的提示
+// 显示删除临时事件的提示（使用共享Toast函数）
 function showDeleteEventToast() {
-    const toast = document.createElement('div');
-    toast.className = 'glass-pane px-6 py-3 rounded-lg shadow-lg text-gray-900 font-medium';
-    toast.textContent = '✓ 临时事件已删除';
-    
-    const container = document.getElementById('toast-container');
-    if (container) {
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+    window.utils.showToast('✓ 临时事件已删除');
 }
 
 function setupCalendarEventListeners() {

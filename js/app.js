@@ -31,46 +31,67 @@ function initializeAppEventListeners() {
         });
     });
 
-    // 主内容区事件
+    // 主内容区事件（优化：合并所有点击事件到单一委托监听器）
     document.getElementById('main-content').addEventListener('click', e => {
-        if(e.target.classList.contains('add-project-btn')) {
-            window.projectsModule.openProjectModal(e.target.dataset.boardKey);
+        const target = e.target;
+        
+        // 添加项目按钮
+        if(target.classList.contains('add-project-btn')) {
+            window.projectsModule.openProjectModal(target.dataset.boardKey);
+            return;
         }
-        if(e.target.classList.contains('board-settings-btn')) {
-            window.projectsModule.openBoardSettingsModal(e.target.dataset.boardKey);
+        
+        // 板块设置按钮（SVG子元素需要用closest）
+        const settingsBtn = target.closest('.board-settings-btn');
+        if(settingsBtn) {
+            window.projectsModule.openBoardSettingsModal(settingsBtn.dataset.boardKey);
+            return;
         }
-        if(e.target.classList.contains('board-delete-btn')) {
-            const boardKey = e.target.dataset.boardKey;
-            window.projectsModule.deleteBoard(boardKey);
+        
+        // 删除板块按钮（SVG子元素需要用closest）
+        const deleteBoardBtn = target.closest('.board-delete-btn');
+        if(deleteBoardBtn) {
+            window.projectsModule.deleteBoard(deleteBoardBtn.dataset.boardKey);
+            return;
         }
-        if(e.target.closest('.project-edit-btn')) {
-            const btn = e.target.closest('.project-edit-btn');
-            const projectId = btn.dataset.projectId;
+        
+        // 编辑项目按钮
+        const editBtn = target.closest('.project-edit-btn');
+        if(editBtn) {
+            const projectId = editBtn.dataset.projectId;
             const boardKey = window.utils.getActiveBoardKey();
             window.projectsModule.openProjectModal(boardKey, projectId);
+            return;
         }
-        if(e.target.closest('.project-delete-btn')) {
-            const btn = e.target.closest('.project-delete-btn');
-            const projectId = btn.dataset.projectId;
-            const boardKey = btn.dataset.boardKey;
+        
+        // 删除项目按钮
+        const deleteProjectBtn = target.closest('.project-delete-btn');
+        if(deleteProjectBtn) {
+            const projectId = deleteProjectBtn.dataset.projectId;
+            const boardKey = deleteProjectBtn.dataset.boardKey;
             window.projectsModule.deleteProject(projectId, boardKey);
+            return;
+        }
+        
+        // 项目日历按钮
+        const calendarBtn = target.closest('.project-calendar-btn');
+        if(calendarBtn) {
+            window.projectCalendarModule.openProjectCalendar(calendarBtn.dataset.projectId);
+            return;
+        }
+        
+        // 跳过任务按钮
+        const skipBtn = target.closest('.skip-task-btn');
+        if(skipBtn) {
+            window.calendarModule.skipTask(skipBtn.dataset.taskId);
+            return;
         }
     });
 
-    // 任务复选框变化
+    // 任务复选框变化（使用change事件更合适）
     document.body.addEventListener('change', e => {
         if (e.target.classList.contains('task-checkbox')) {
             window.calendarModule.toggleTaskCompletion(e.target.dataset.taskId);
-        }
-    });
-    
-    // 跳过任务按钮
-    document.body.addEventListener('click', e => {
-        if (e.target.classList.contains('skip-task-btn')) {
-            const taskId = e.target.dataset.taskId;
-            if (confirm('确定要跳过这个任务吗？明天它会重新出现。')) {
-                window.calendarModule.skipTask(taskId);
-            }
         }
     });
 

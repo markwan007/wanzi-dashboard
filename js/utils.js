@@ -14,13 +14,15 @@ function getActiveBoardKey() {
     return activeNav ? activeNav.dataset.board : 'home';
 }
 
-// 颜色映射
+// 颜色映射 - 彩虹色系：红橙黄绿青蓝紫
 const colorMap = {
-    purple: { gradient: 'from-red-500 to-orange-500', dot: 'bg-red-500', border: 'border-red-500' },
-    blue: { gradient: 'from-orange-500 to-amber-500', dot: 'bg-orange-500', border: 'border-orange-500' },
-    indigo: { gradient: 'from-amber-500 to-yellow-500', dot: 'bg-amber-500', border: 'border-amber-500' },
-    rose: { gradient: 'from-rose-500 to-red-500', dot: 'bg-rose-500', border: 'border-rose-500' },
-    amber: { gradient: 'from-yellow-400 to-amber-400', dot: 'bg-yellow-400', border: 'border-yellow-400' },
+    red: { gradient: 'from-red-500 to-red-600', dot: 'bg-red-500', border: 'border-red-500' },
+    orange: { gradient: 'from-orange-500 to-orange-600', dot: 'bg-orange-500', border: 'border-orange-500' },
+    yellow: { gradient: 'from-yellow-400 to-yellow-500', dot: 'bg-yellow-400', border: 'border-yellow-400' },
+    green: { gradient: 'from-green-500 to-green-600', dot: 'bg-green-500', border: 'border-green-500' },
+    cyan: { gradient: 'from-cyan-500 to-cyan-600', dot: 'bg-cyan-500', border: 'border-cyan-500' },
+    blue: { gradient: 'from-blue-500 to-blue-600', dot: 'bg-blue-500', border: 'border-blue-500' },
+    purple: { gradient: 'from-purple-500 to-purple-600', dot: 'bg-purple-500', border: 'border-purple-500' },
     gray: { gradient: 'from-gray-500 to-gray-600', dot: 'bg-gray-500', border: 'border-gray-500'}
 };
 

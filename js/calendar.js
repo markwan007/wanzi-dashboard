@@ -98,12 +98,52 @@ function renderAgenda() {
     }
 
     agendaList.innerHTML = '';
-    if (tasksForViewedDate.length > 0) {
-        tasksForViewedDate.forEach(taskInfo => {
+    
+    if (tasksForViewedDate.length === 0) {
+        agendaList.innerHTML = '<li class="text-gray-400">当天没有任务</li>';
+        return;
+    }
+    
+    // 按板块分组任务
+    const tasksByBoard = {};
+    const boardOrder = ['startup', 'finance', 'learning', 'health', 'misc', 'event'];
+    
+    tasksForViewedDate.forEach(task => {
+        const boardKey = task.boardKey || 'event';
+        if (!tasksByBoard[boardKey]) {
+            tasksByBoard[boardKey] = [];
+        }
+        tasksByBoard[boardKey].push(task);
+    });
+    
+    // 按顺序渲染每个板块
+    boardOrder.forEach(boardKey => {
+        const tasks = tasksByBoard[boardKey];
+        if (!tasks || tasks.length === 0) return;
+        
+        // 获取板块信息
+        const boardData = window.appData?.boards[boardKey];
+        const boardTitle = boardData?.title || (boardKey === 'event' ? '临时事件' : boardKey);
+        const boardColor = boardData?.color || 'gray';
+        const colors = window.utils.colorMap[boardColor] || window.utils.colorMap.gray;
+        
+        // 创建板块分组标题
+        const groupHeader = document.createElement('li');
+        groupHeader.className = 'pt-4 pb-2 first:pt-0';
+        groupHeader.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded ${colors.dot}"></div>
+                <h4 class="font-semibold text-gray-700">${window.utils.escapeHtml(boardTitle)}</h4>
+                <span class="text-xs text-gray-400">(${tasks.length}个任务)</span>
+            </div>
+        `;
+        agendaList.appendChild(groupHeader);
+        
+        // 渲染该板块的所有任务
+        tasks.forEach(taskInfo => {
             const li = document.createElement('li');
-            li.className = 'flex items-start space-x-3';
+            li.className = 'flex items-start space-x-3 ml-5 mb-3';
             const isCompleted = isTaskCompletedOnDate(taskInfo.id, viewedDate);
-            const colors = window.utils.colorMap[taskInfo.color] || window.utils.colorMap.gray;
             
             // 备注 tooltip
             const tooltipAttr = taskInfo.notes ? `title="${window.utils.escapeHtml(taskInfo.notes)}"` : '';
@@ -111,43 +151,41 @@ function renderAgenda() {
             // 使用共享函数构建任务链接HTML
             const linkHTML = window.utils.buildTaskLinksHtml(taskInfo, 'agenda-', isCompleted, tooltipAttr);
 
-                        // 为复盘任务添加日志图标
-                        const reviewIconHTML = taskInfo.isReview ? `
-                            <button class="review-journal-btn p-2 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors" 
-                                    data-task-id="${taskInfo.id}" 
-                                    data-project-id="${taskInfo.projectId}"
-                                    title="打开复盘日志">
-                                📔
-                            </button>
-                        ` : '';
-                        
-                        // 跳过按钮（小叉叉）
-                        const skipButtonHTML = `
-                            <button class="skip-task-btn text-gray-400 hover:text-red-500 p-1 text-sm transition-colors" 
-                                    data-task-id="${taskInfo.id}" 
-                                    title="今天跳过此任务">
-                                ✕
-                            </button>
-                        `;
-                        
-                        // 备注显示（使用共享函数）
-                        const notesHTML = window.utils.buildTaskNotesHtml(taskInfo.notes, 'ml-4');
-                        
-                        li.innerHTML = `
-                            <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
-                            <div class="flex-grow">
-                                ${linkHTML}
-                                ${notesHTML}
-                            </div>
-                            ${reviewIconHTML}
-                            ${skipButtonHTML}
-                            <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
-                        `;
+            // 为复盘任务添加日志图标
+            const reviewIconHTML = taskInfo.isReview ? `
+                <button class="review-journal-btn p-2 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors" 
+                        data-task-id="${taskInfo.id}" 
+                        data-project-id="${taskInfo.projectId}"
+                        title="打开复盘日志">
+                    📔
+                </button>
+            ` : '';
+            
+            // 跳过按钮（小叉叉）
+            const skipButtonHTML = `
+                <button class="skip-task-btn text-gray-400 hover:text-red-500 p-1 text-sm transition-colors" 
+                        data-task-id="${taskInfo.id}" 
+                        title="今天跳过此任务">
+                    ✕
+                </button>
+            `;
+            
+            // 备注显示（使用共享函数）
+            const notesHTML = window.utils.buildTaskNotesHtml(taskInfo.notes, 'ml-4');
+            
+            li.innerHTML = `
+                <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
+                <div class="flex-grow">
+                    ${linkHTML}
+                    ${notesHTML}
+                </div>
+                ${reviewIconHTML}
+                ${skipButtonHTML}
+                <input id="agenda-${taskInfo.id}" type="checkbox" class="custom-checkbox mt-1 task-checkbox" data-task-id="${taskInfo.id}" ${isCompleted ? 'checked' : ''}>
+            `;
             agendaList.appendChild(li);
         });
-    } else {
-        agendaList.innerHTML = '<li class="text-gray-400">当天没有任务</li>';
-    }
+    });
 }
 
 function getTasksForDate(date) {

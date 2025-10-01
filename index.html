@@ -131,16 +131,16 @@
             <div id="boards-container">
                 <!-- 主页板块 -->
                 <div id="board-home" class="board-panel fade-in">
-                    <header class="mb-10 relative overflow-hidden">
-                        <div class="flex items-baseline gap-4 mb-2">
-                            <h2 id="welcome-title" class="text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">你好，欢迎回来！</h2>
-                            <span id="date-emoji" class="text-2xl">✨</span>
-                        </div>
-                        <div id="viewed-date-display" class="text-lg font-medium text-gray-600 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>今天是...</span>
+                    <header class="mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 id="welcome-title" class="text-2xl font-semibold text-gray-900 mb-1">你好，欢迎回来</h2>
+                                <p id="viewed-date-display" class="text-sm text-gray-500">今天是...</p>
+                            </div>
+                            <div id="date-badge" class="text-right">
+                                <div class="text-3xl font-bold text-gray-900" id="date-day">1</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider" id="date-month-year">Oct 2025</div>
+                            </div>
                         </div>
                     </header>
                     <section class="mb-10 grid grid-cols-1 lg:grid-cols-3 gap-8">

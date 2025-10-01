@@ -190,7 +190,7 @@ function getTasksForDate(date) {
                     
                     // 如果任务被跳过，则不显示
                     if (shouldShow && !skippedTasks.includes(task.id)) {
-                        tasks.push({ ...task, projectTitle: project.title, projectId: project.id, color: board.color });
+                        tasks.push({ ...task, projectTitle: project.title, projectId: project.id, color: board.color, boardKey: boardKey });
                     }
                 });
             }
@@ -204,21 +204,21 @@ function getTasksForDate(date) {
         }
     });
     
-    // 定义板块顺序
+    // 定义板块顺序（按boardKey排序，而不是颜色）
     const boardOrder = {
-        'purple': 1,  // 创业
-        'blue': 2,    // 财务
-        'indigo': 3,  // 学习
-        'rose': 4,    // 健康
-        'amber': 5,   // 其他
-        'gray': 6     // 临时事件
+        'startup': 1,   // 创业
+        'finance': 2,   // 财务
+        'learning': 3,  // 学习
+        'health': 4,    // 健康
+        'misc': 5,      // 其他
+        'event': 6      // 临时事件
     };
     
     // 先按板块顺序排序，再按执行时间排序
     tasks.sort((a, b) => {
-        // 首先按板块顺序
-        const orderA = boardOrder[a.color] || 999;
-        const orderB = boardOrder[b.color] || 999;
+        // 首先按板块顺序（使用boardKey，临时事件没有boardKey）
+        const orderA = boardOrder[a.boardKey] || 999;
+        const orderB = boardOrder[b.boardKey] || 999;
         
         if (orderA !== orderB) {
             return orderA - orderB;

@@ -137,7 +137,6 @@ function renderAgenda() {
                             <div class="mt-1 w-2 h-2 rounded-full ${colors.dot} flex-shrink-0"></div>
                             <div class="flex-grow">
                                 ${linkHTML}
-                                <p class="text-sm text-gray-500">${taskInfo.projectTitle}</p>
                                 ${notesHTML}
                             </div>
                             ${reviewIconHTML}

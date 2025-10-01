@@ -80,7 +80,7 @@ function renderAgenda() {
     });
     
     if (isToday) {
-        welcomeTitle.textContent = '你好，欢迎回来';
+        welcomeTitle.textContent = window.utils.getDailyPhilosophy();
         dateDisplay.textContent = viewedDate.toLocaleDateString('zh-CN', { 
             weekday: 'long', 
             year: 'numeric', 

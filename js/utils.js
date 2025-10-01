@@ -77,8 +77,42 @@ function buildTaskNotesHtml(notes, marginClass = 'ml-4') {
     return notes ? `<p class="text-xs text-gray-400 italic ${marginClass} mt-1">💡 ${escapeHtml(notes)}</p>` : '';
 }
 
+
+// 每日哲学名言库
+const philosophyQuotes = [
+    "未经审视的人生不值得过。 —— 苏格拉底",
+    "我思故我在。 —— 笛卡尔",
+    "人是万物的尺度。 —— 普罗泰戈拉",
+    "认识你自己。 —— 德尔斐神庙箴言",
+    "存在先于本质。 —— 萨特",
+    "凡是合乎理性的东西都是现实的，凡是现实的东西都是合乎理性的。 —— 黑格尔",
+    "他人即地狱。 —— 萨特",
+    "人生而自由，却无往不在枷锁之中。 —— 卢梭",
+    "知识就是力量。 —— 培根",
+    "理性为感性所引导，就如同盲人为明眼人所引导。 —— 叔本华",
+    "生活不是被命运支配的，而是被我们的决定所塑造的。 —— 维克多·弗兰克",
+    "我们的痛苦源于对痛苦的抗拒。 —— 佛陀",
+    "人如其所思。 —— 马库斯·奥勒留",
+    "万物皆流，无物常住。 —— 赫拉克利特",
+    "吾生也有涯，而知也无涯。 —— 庄子",
+    "天行健，君子以自强不息。 —— 《周易》",
+    "知之为知之，不知为不知，是知也。 —— 孔子",
+    "道可道，非常道。名可名，非常名。 —— 老子",
+    "简单是终极的复杂。 —— 达芬奇",
+    "你永远不会真正理解一个人，直到你从他的角度看事情。 —— 《杀死一只知更鸟》"
+];
+
+// 获取每日哲学名言（根据日期固定，每天一句）
+function getDailyPhilosophy() {
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const index = dayOfYear % philosophyQuotes.length;
+    return philosophyQuotes[index];
+}
+
 // 导出工具函数
 window.utils = {
+    getDailyPhilosophy,
     toDateString,
     isSameDay,
     getActiveBoardKey,

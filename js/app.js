@@ -100,6 +100,7 @@ function initializeAppEventListeners() {
     window.projectsModule.setupProjectEventListeners();
     window.reviewModule.setupReviewEventListeners();
     window.projectCalendarModule.setupProjectCalendarEventListeners();
+    initBoardShortcuts();
     window.authModule.setupLogout();
 }
 
@@ -121,4 +122,63 @@ window.app = {
     loadData,
     initializeAppEventListeners,
     initializeApp
+};
+
+// 板块快捷入口功能
+function initBoardShortcuts() {
+    // 点击快捷卡片跳转到对应板块
+    document.querySelectorAll('.board-shortcut-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const boardKey = this.dataset.board;
+            const navItem = document.querySelector(`.nav-item[data-board="${boardKey}"]`);
+            if (navItem) {
+                navItem.click();
+            }
+        });
+    });
+    
+    // 更新各板块任务数量
+    updateBoardTaskCounts();
+}
+
+// 更新板块任务数量显示
+function updateBoardTaskCounts() {
+    if (!window.appData) return;
+    
+    const today = new Date();
+    const todayTasks = window.calendarModule.getTasksForDate(today);
+    
+    // 统计各板块任务数
+    const counts = {
+        startup: 0,
+        finance: 0,
+        learning: 0,
+        health: 0,
+        misc: 0
+    };
+    
+    todayTasks.forEach(task => {
+        if (task.boardKey && counts.hasOwnProperty(task.boardKey)) {
+            counts[task.boardKey]++;
+        }
+    });
+    
+    // 更新UI
+    Object.keys(counts).forEach(boardKey => {
+        const countEl = document.getElementById(`${boardKey}-count`);
+        if (countEl) {
+            const count = counts[boardKey];
+            countEl.textContent = count === 0 ? '暂无任务' : `${count}个任务`;
+            countEl.style.color = count > 0 ? '#f97316' : '#94a3b8';
+        }
+    });
+}
+
+// 在renderAll中调用更新
+const originalRenderAll = renderAll;
+renderAll = function() {
+    originalRenderAll();
+    if (typeof updateBoardTaskCounts === 'function') {
+        updateBoardTaskCounts();
+    }
 };

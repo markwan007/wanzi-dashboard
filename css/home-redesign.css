@@ -1,0 +1,261 @@
+/* ========================================
+   🎨 首页重设计 - 基于插画风格
+   配色：深蓝 #1e5f8c + 橙色 #f97316 + 清新绿
+   ======================================== */
+
+/* 主色调更新 */
+:root {
+    --primary-blue: #1e5f8c;
+    --primary-orange: #f97316;
+    --accent-green: #10b981;
+    --bg-cream: #fef9f3;
+    --text-dark: #1e293b;
+}
+
+/* 首页专属背景 */
+#board-home {
+    background: linear-gradient(135deg, rgba(30, 95, 140, 0.03) 0%, rgba(249, 115, 22, 0.03) 100%);
+    border-radius: 24px;
+    padding: 2rem;
+}
+
+/* 哲学名言区域 - 设计升级 */
+#board-home header {
+    background: linear-gradient(135deg, #1e5f8c 0%, #2563eb 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    color: white;
+    box-shadow: 0 10px 40px -15px rgba(30, 95, 140, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+#board-home header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+#welcome-title {
+    color: white !important;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#viewed-date-display {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.95rem;
+    margin-top: 0.75rem;
+}
+
+#date-badge {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#date-day {
+    color: white !important;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+#date-month-year {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 板块快捷入口 - 新增 */
+.board-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.board-shortcut-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.board-shortcut-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-orange);
+}
+
+.board-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.board-shortcut-card .board-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.board-shortcut-card .task-count {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* 日历卡片 - 视觉升级 */
+.calendar-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(30, 95, 140, 0.1);
+}
+
+.calendar-card h3 {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+#calendar-grid .calendar-day {
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+#calendar-grid .calendar-day:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+    transform: scale(1.05);
+}
+
+#calendar-grid .calendar-day.today {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, #fb923c 100%);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+#calendar-grid .calendar-day.selected {
+    border: 2px solid var(--primary-blue);
+    background: rgba(30, 95, 140, 0.08);
+}
+
+/* 日程清单卡片 */
+.agenda-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(249, 115, 22, 0.1);
+}
+
+.agenda-card h3 {
+    color: var(--primary-orange);
+    font-weight: 600;
+}
+
+#add-event-btn {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, #fb923c 100%);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    transition: all 0.3s ease;
+}
+
+#add-event-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+/* 任务列表样式优化 */
+#agenda-list li {
+    background: rgba(248, 250, 252, 0.5);
+    padding: 0.75rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+#agenda-list li:hover {
+    background: rgba(248, 250, 252, 1);
+    transform: translateX(4px);
+}
+
+/* 板块分组标题优化 */
+#agenda-list .group-header {
+    background: linear-gradient(90deg, transparent 0%, rgba(30, 95, 140, 0.05) 50%, transparent 100%);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    margin: 1rem 0 0.5rem 0;
+}
+
+#agenda-list .group-header h4 {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--primary-blue);
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+    .board-shortcuts {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #board-home {
+        padding: 1rem;
+    }
+    
+    #board-home header {
+        padding: 1.5rem;
+    }
+    
+    .board-shortcuts {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 动效增强 */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.board-shortcut-card:hover .board-icon {
+    animation: float 2s ease-in-out infinite;
+}
+
+/* 加载动画 */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+

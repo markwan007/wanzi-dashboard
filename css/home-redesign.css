@@ -259,3 +259,51 @@
     animation: shimmer 2s infinite;
 }
 
+
+/* 日历背景插画 */
+.calendar-card {
+    position: relative;
+    background: white;
+    overflow: hidden;
+}
+
+.calendar-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../img/calendar-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.08;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.calendar-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* 增强日历内容可读性 */
+.calendar-card h3,
+#calendar-grid {
+    position: relative;
+    z-index: 2;
+}
+
+#calendar-grid .calendar-day {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+#calendar-grid .calendar-day:hover {
+    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+}
+
+#calendar-grid .calendar-day.today {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, #fb923c 100%);
+}

@@ -344,10 +344,10 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url('../img/calendar-bg.png?v=3');
-    background-size: contain;
-    background-repeat: repeat;
-    background-position: top center;
+    background-image: url('../img/calendar-bg.png?v=4');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
     background-attachment: fixed;
     opacity: 0.3;
     z-index: -1;

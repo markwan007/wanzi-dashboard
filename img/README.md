@@ -1,10 +1,10 @@
 # 图片资源目录
 
-## calendar-bg.jpg
+## calendar-bg.png
 日历背景插画
 
 ### 使用说明
-1. 将您的插画图片重命名为 `calendar-bg.jpg`
+1. 将您的插画图片重命名为 `calendar-bg.png`
 2. 放到这个 `img/` 目录下
 3. 建议尺寸：1200px × 800px
 4. 格式：JPG 或 PNG

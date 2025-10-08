@@ -307,3 +307,44 @@
 #calendar-grid .calendar-day.today {
     background: linear-gradient(135deg, var(--primary-orange) 0%, #fb923c 100%);
 }
+
+/* ========================================
+   🎨 整站背景插画
+   ======================================== */
+
+/* 移除日历局部背景，改为全站背景 */
+body {
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../img/calendar-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.06;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* 增强所有卡片的对比度 */
+.glass-pane,
+.calendar-card,
+.agenda-card,
+.board-shortcut-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* 覆盖日历的局部背景 */
+.calendar-card::before {
+    display: none !important;
+}

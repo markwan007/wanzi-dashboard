@@ -345,9 +345,9 @@ body::before {
     right: 0;
     bottom: 0;
     background-image: url('../img/calendar-bg.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    background-size: auto 100%;
+    background-repeat: repeat;
+    background-position: top right;
     background-attachment: fixed;
     opacity: 0.2;
     z-index: -1;

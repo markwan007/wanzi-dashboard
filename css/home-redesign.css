@@ -21,24 +21,32 @@
 
 /* 哲学名言区域 - 设计升级 */
 #board-home header {
-    background: linear-gradient(135deg, #1e5f8c 0%, #2563eb 100%);
+    background: rgba(30, 95, 140, 0.75);
     border-radius: 20px;
     padding: 2.5rem;
     color: white;
-    box-shadow: 0 10px 40px -15px rgba(30, 95, 140, 0.4);
+    box-shadow: 
+        0 20px 60px -15px rgba(30, 95, 140, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
 #board-home header::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    border-radius: 50%;
+    bottom: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 20%, 
+        rgba(255, 255, 255, 0.3) 80%, 
+        transparent 100%);
 }
 
 #welcome-title {
@@ -229,8 +237,19 @@
     }
     
     #board-home header {
-        padding: 1.5rem;
-    }
+    background: rgba(30, 95, 140, 0.75);
+    border-radius: 20px;
+    padding: 2.5rem;
+    color: white;
+    box-shadow: 
+        0 20px 60px -15px rgba(30, 95, 140, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
     
     .board-shortcuts {
         grid-template-columns: repeat(2, 1fr);
@@ -348,4 +367,22 @@ body::before {
 /* 覆盖日历的局部背景 */
 .calendar-card::before {
     display: none !important;
+}
+
+/* 哲学卡片额外装饰 - 日记本感 */
+#board-home header::after {
+    content: '📖';
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 1.5rem;
+    opacity: 0.3;
+}
+
+/* 日期徽章也调整为半透明 */
+#date-badge {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
